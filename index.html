@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#1E3A5F">
+  <title>Jobsite Weather Planner</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: #111827;
+      background: #FFFFFF;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --navy: #1E3A5F;
+      --blue: #2563EB;
+      --muted: #6B7280;
+      --line: #D1D5DB;
+      --canvas: #F3F4F6;
+      --go-bg: #DCFCE7;
+      --go-text: #166534;
+      --go-line: #86EFAC;
+      --caution-bg: #FEF3C7;
+      --caution-text: #92400E;
+      --caution-line: #FCD34D;
+      --stop-bg: #FEE2E2;
+      --stop-text: #991B1B;
+      --stop-line: #FCA5A5;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: #FFFFFF;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    button:focus-visible,
+    input:focus-visible,
+    summary:focus-visible,
+    .day-card:focus-visible {
+      outline: 2px solid var(--blue);
+      outline-offset: 2px;
+    }
+
+    .topbar {
+      min-height: 76px;
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      border-bottom: 1px solid #E5E7EB;
+      background: #FFFFFF;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      width: 40px;
+      height: 40px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      color: #FFFFFF;
+      background: var(--navy);
+      border-radius: 12px;
+    }
+
+    .brand-mark svg {
+      width: 23px;
+      height: 23px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 18px;
+      font-weight: 750;
+      letter-spacing: -0.02em;
+    }
+
+    .brand p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .preview-flag {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      color: #854D0E;
+      background: #FEF3C7;
+      border: 1px solid #FCD34D;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+
+    .preview-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #D97706;
+    }
+
+    main {
+      padding: 24px;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: 380px minmax(0, 1fr);
+      align-items: start;
+      gap: 20px;
+      max-width: 1800px;
+      margin: 0 auto;
+    }
+
+    .left-column,
+    .forecast-column {
+      min-width: 0;
+    }
+
+    .panel {
+      overflow: hidden;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+    }
+
+    .panel-heading {
+      min-height: 58px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+
+    .panel-heading h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 750;
+    }
+
+    .panel-heading p {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .map-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #166534;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .map-status::before {
+      width: 7px;
+      height: 7px;
+      content: "";
+      border-radius: 50%;
+      background: #22C55E;
+    }
+
+    #map {
+      height: 420px;
+      min-height: 420px;
+      background: #E5E7EB;
+      isolation: isolate;
+    }
+
+    .map-fallback {
+      height: 100%;
+      display: none;
+      place-items: center;
+      padding: 24px;
+      color: #475569;
+      text-align: center;
+      background:
+        linear-gradient(34deg, transparent 47%, #CBD5E1 48%, #CBD5E1 49%, transparent 50%),
+        linear-gradient(146deg, transparent 47%, #CBD5E1 48%, #CBD5E1 49%, transparent 50%),
+        #E8EEF1;
+    }
+
+    .map-fallback strong {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--navy);
+    }
+
+    .location-controls {
+      padding: 16px;
+    }
+
+    .coordinates {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .field label,
+    .threshold-field label {
+      display: block;
+      margin-bottom: 6px;
+      color: #374151;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .field input,
+    .threshold-field input {
+      width: 100%;
+      min-height: 42px;
+      padding: 9px 10px;
+      color: #374151;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .control-actions {
+      margin-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .button {
+      min-height: 40px;
+      padding: 9px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background-color 120ms ease, border-color 120ms ease, transform 120ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.58;
+      transform: none;
+    }
+
+    .button-primary {
+      color: #FFFFFF;
+      background: var(--navy);
+      border-color: var(--navy);
+    }
+
+    .button-primary:hover {
+      background: #16304F;
+    }
+
+    .button-secondary {
+      color: var(--navy);
+      background: #FFFFFF;
+      border-color: #CBD5E1;
+    }
+
+    .button-secondary:hover {
+      background: #F8FAFC;
+      border-color: #94A3B8;
+    }
+
+    .button-small {
+      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 12px;
+    }
+
+    .location-note {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .thresholds {
+      margin-top: 16px;
+    }
+
+    .thresholds details {
+      border-radius: 12px;
+    }
+
+    .thresholds summary {
+      min-height: 54px;
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: var(--navy);
+      cursor: pointer;
+      list-style: none;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .thresholds summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .summary-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .sliders-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      color: var(--blue);
+      background: #EFF6FF;
+      border-radius: 7px;
+    }
+
+    .chevron {
+      color: var(--muted);
+      transition: transform 120ms ease;
+    }
+
+    details[open] .chevron {
+      transform: rotate(180deg);
+    }
+
+    .threshold-content {
+      padding: 0 16px 16px;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .threshold-intro {
+      margin: 12px 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .threshold-group {
+      margin-top: 14px;
+    }
+
+    .threshold-group h3 {
+      margin: 0 0 9px;
+      color: #374151;
+      font-size: 12px;
+    }
+
+    .threshold-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .threshold-field input {
+      min-height: 38px;
+      font-size: 14px;
+    }
+
+    .threshold-actions {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .static-note {
+      display: block;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .forecast-heading {
+      min-height: 58px;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .forecast-heading h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 21px;
+      font-weight: 780;
+      letter-spacing: -0.025em;
+    }
+
+    .forecast-heading p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .location-pill {
+      padding: 7px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 650;
+      white-space: nowrap;
+    }
+
+    .location-pill svg {
+      color: var(--blue);
+    }
+
+    .forecast-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .day-card {
+      min-width: 0;
+      padding: 12px 10px 11px;
+      color: inherit;
+      text-align: left;
+      background: #FFFFFF;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
+      transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .day-card:hover,
+    .day-card[aria-pressed="true"] {
+      border-color: #93C5FD;
+      box-shadow: 0 3px 10px rgb(37 99 235 / 9%);
+      transform: translateY(-2px);
+    }
+
+    .day-name {
+      display: block;
+      overflow: hidden;
+      color: var(--navy);
+      font-size: 12px;
+      font-weight: 750;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .day-date {
+      display: block;
+      margin: 4px 0 12px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .day-condition {
+      min-height: 33px;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .condition-icon {
+      width: 18px;
+      flex: 0 0 18px;
+      color: #64748B;
+      text-align: center;
+      font-size: 15px;
+    }
+
+    .activity-status {
+      padding-top: 9px;
+      border-top: 1px solid #F1F5F9;
+    }
+
+    .activity-status + .activity-status {
+      margin-top: 8px;
+    }
+
+    .activity-name {
+      min-height: 26px;
+      margin-bottom: 5px;
+      display: block;
+      color: #4B5563;
+      font-size: 10px;
+      font-weight: 650;
+      line-height: 1.3;
+    }
+
+    .badge {
+      min-height: 22px;
+      padding: 4px 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 800;
+      letter-spacing: 0.02em;
+      line-height: 1;
+      white-space: nowrap;
+    }
+
+    .badge-go {
+      color: var(--go-text);
+      background: var(--go-bg);
+      border-color: var(--go-line);
+    }
+
+    .badge-caution {
+      color: var(--caution-text);
+      background: var(--caution-bg);
+      border-color: var(--caution-line);
+    }
+
+    .badge-no-go {
+      color: var(--stop-text);
+      background: var(--stop-bg);
+      border-color: var(--stop-line);
+    }
+
+    .grid-hint {
+      margin: 10px 2px 0;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .threshold-inline {
+      margin-top: 20px;
+    }
+
+    .thresholds .panel {
+      overflow: visible;
+    }
+
+    .detail-scrim {
+      position: fixed;
+      z-index: 20;
+      inset: 0;
+      background: rgb(15 23 42 / 28%);
+    }
+
+    .detail-drawer {
+      position: fixed;
+      z-index: 21;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: min(440px, 100vw);
+      padding: 0 0 24px;
+      overflow-y: auto;
+      background: #FFFFFF;
+      border-left: 1px solid #CBD5E1;
+      box-shadow: -16px 0 40px rgb(15 23 42 / 16%);
+      animation: enter-drawer 180ms ease-out;
+    }
+
+    @keyframes enter-drawer {
+      from { transform: translateX(16px); opacity: 0.7; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .drawer-header {
+      min-height: 80px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid #E5E7EB;
+    }
+
+    .drawer-eyebrow {
+      margin: 0 0 5px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .drawer-header h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 19px;
+      letter-spacing: -0.02em;
+    }
+
+    .icon-button {
+      width: 36px;
+      height: 36px;
+      flex: 0 0 auto;
+      display: grid;
+      place-items: center;
+      color: #475569;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+    }
+
+    .icon-button:hover {
+      background: #F8FAFC;
+    }
+
+    .drawer-content {
+      padding: 18px 20px 24px;
+    }
+
+    .drawer-intro {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .detail-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      padding: 10px;
+      background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+    }
+
+    .metric-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .metric-value {
+      color: #1F2937;
+      font-size: 16px;
+      font-weight: 750;
+    }
+
+    .detail-activity {
+      padding: 13px 0;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .detail-activity-heading {
+      margin-bottom: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .detail-activity-heading h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 13px;
+    }
+
+    .detail-reason {
+      margin: 0;
+      color: #4B5563;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .hourly-details {
+      margin-top: 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .hourly-details summary {
+      min-height: 44px;
+      padding: 12px;
+      color: var(--navy);
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .hourly-table-wrap {
+      max-width: 100%;
+      overflow-x: auto;
+      border-top: 1px solid #E5E7EB;
+    }
+
+    .hourly-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .hourly-table th,
+    .hourly-table td {
+      padding: 8px 7px;
+      border-bottom: 1px solid #E5E7EB;
+      text-align: right;
+    }
+
+    .hourly-table th {
+      color: #475569;
+      background: #F8FAFC;
+      font-size: 10px;
+    }
+
+    .hourly-table th:first-child,
+    .hourly-table td:first-child {
+      text-align: left;
+    }
+
+    .copy-button {
+      margin: 10px;
+    }
+
+    .preview-disclaimer {
+      margin: 16px 0 0;
+      padding: 10px 11px;
+      color: #854D0E;
+      background: #FFFBEB;
+      border: 1px solid #FDE68A;
+      border-radius: 6px;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+
+    @media (max-width: 1199px) and (min-width: 769px) {
+      main {
+        padding: 20px;
+      }
+
+      .workspace {
+        grid-template-columns: 340px minmax(0, 1fr);
+      }
+
+      .forecast-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .day-card {
+        padding: 12px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .topbar {
+        min-height: 68px;
+        padding: 12px;
+      }
+
+      .brand-mark {
+        width: 36px;
+        height: 36px;
+      }
+
+      .brand h1 {
+        font-size: 16px;
+      }
+
+      .brand p {
+        font-size: 11px;
+      }
+
+      .preview-flag {
+        padding: 6px 8px;
+        font-size: 10px;
+      }
+
+      main {
+        padding: 12px;
+      }
+
+      .workspace {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 16px;
+      }
+
+      #map {
+        height: 360px;
+        min-height: 360px;
+      }
+
+      .forecast-heading {
+        min-height: unset;
+        margin-bottom: 12px;
+        align-items: start;
+      }
+
+      .forecast-heading h2 {
+        font-size: 19px;
+      }
+
+      .forecast-heading p {
+        font-size: 12px;
+      }
+
+      .location-pill {
+        font-size: 11px;
+      }
+
+      .forecast-grid {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 8px;
+      }
+
+      .day-card {
+        padding: 12px;
+        display: grid;
+        grid-template-columns: 70px minmax(84px, 1fr) repeat(3, minmax(66px, auto));
+        align-items: center;
+        gap: 8px;
+      }
+
+      .day-date {
+        margin: 3px 0 0;
+      }
+
+      .day-condition {
+        min-height: 0;
+        margin: 0;
+        font-size: 11px;
+      }
+
+      .activity-status {
+        padding: 0;
+        border: 0;
+      }
+
+      .activity-status + .activity-status {
+        margin: 0;
+      }
+
+      .activity-name {
+        min-height: 25px;
+        margin-bottom: 4px;
+        font-size: 9px;
+      }
+
+      .detail-scrim {
+        background: rgb(15 23 42 / 32%);
+      }
+
+      .detail-drawer {
+        top: auto;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        max-height: 82dvh;
+        padding-bottom: max(16px, env(safe-area-inset-bottom));
+        border: 0;
+        border-top: 1px solid #CBD5E1;
+        border-radius: 16px 16px 0 0;
+        box-shadow: 0 -12px 40px rgb(15 23 42 / 18%);
+        animation: enter-sheet 180ms ease-out;
+      }
+
+      @keyframes enter-sheet {
+        from { transform: translateY(16px); opacity: 0.7; }
+        to { transform: translateY(0); opacity: 1; }
+      }
+
+      .drawer-header {
+        min-height: 70px;
+        padding: 14px 16px;
+      }
+
+      .drawer-content {
+        padding: 14px 16px 18px;
+      }
+
+      .detail-metrics {
+        gap: 6px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .brand {
+        gap: 8px;
+      }
+
+      .brand h1 {
+        font-size: 14px;
+      }
+
+      .preview-flag {
+        gap: 5px;
+        font-size: 9px;
+      }
+
+      .forecast-heading {
+        display: block;
+      }
+
+      .location-pill {
+        margin-top: 10px;
+      }
+
+      .day-card {
+        grid-template-columns: 58px minmax(68px, 1fr) repeat(3, minmax(54px, auto));
+        gap: 5px;
+        padding: 10px 8px;
+      }
+
+      .day-name {
+        font-size: 11px;
+      }
+
+      .day-date {
+        font-size: 10px;
+      }
+
+      .day-condition {
+        font-size: 10px;
+      }
+
+      .condition-icon {
+        display: none;
+      }
+
+      .activity-name {
+        font-size: 8px;
+      }
+
+      .badge {
+        padding: 4px 5px;
+        font-size: 9px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 19h18M5 19V9l7-4 7 4v10M9 19v-6h6v6M12 5V2m-2 2h4"></path>
+        </svg>
+      </div>
+      <div>
+        <h1>Jobsite Weather Planner</h1>
+        <p>Weather-aware planning for the work ahead</p>
+      </div>
+    </div>
+    <span class="preview-flag"><span class="preview-dot" aria-hidden="true"></span>Preview data · not live</span>
+  </header>
+
+  <main>
+    <div class="workspace">
+      <aside class="left-column" aria-label="Jobsite location and settings">
+        <section class="panel map-panel" aria-labelledby="map-title">
+          <div class="panel-heading">
+            <div>
+              <h2 id="map-title">Jobsite Location</h2>
+              <p>Map preview · Provo, Utah</p>
+            </div>
+            <span class="map-status" id="map-status" role="status">Provo jobsite</span>
+          </div>
+          <div id="map" role="region" aria-label="Map preview centered on the Provo, Utah jobsite">
+            <div class="map-fallback" id="map-fallback">
+              <p><strong>Provo, Utah</strong>Map tiles could not be loaded. The location controls are shown for preview.</p>
+            </div>
+          </div>
+          <div class="location-controls">
+            <div class="coordinates">
+              <div class="field">
+                <label for="latitude">Latitude (°N)</label>
+                <input id="latitude" type="number" value="40.2338" step="0.0001" min="-90" max="90" readonly aria-label="Latitude preview value">
+              </div>
+              <div class="field">
+                <label for="longitude">Longitude (°W)</label>
+                <input id="longitude" type="number" value="111.6585" step="0.0001" min="0" max="180" readonly aria-label="Longitude preview value">
+              </div>
+            </div>
+            <div class="control-actions">
+              <button class="button button-primary" type="button" disabled title="Location editing is part of a later build stage">Apply Location</button>
+              <button class="button button-secondary button-small" type="button" id="reset-provo">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path><path d="M3 3v5h5"></path>
+                </svg>
+                Reset to Provo
+              </button>
+            </div>
+            <p class="location-note">Coordinates and forecast are static in this layout preview. Reset returns the map to its initial Provo view.</p>
+          </div>
+        </section>
+
+        <section class="thresholds panel threshold-inline" aria-label="Threshold settings">
+          <details>
+            <summary>
+              <span class="summary-label">
+                <span class="sliders-icon" aria-hidden="true">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M4 6h9M17 6h3M4 12h3M11 12h9M4 18h9M17 18h3"></path>
+                    <circle cx="15" cy="6" r="2"></circle><circle cx="9" cy="12" r="2"></circle><circle cx="15" cy="18" r="2"></circle>
+                  </svg>
+                </span>
+                Threshold Settings
+              </span>
+              <svg class="chevron" width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6"></path>
+              </svg>
+            </summary>
+            <div class="threshold-content">
+              <p class="threshold-intro">Defaults shown for the layout preview. Threshold controls are not applied in this mockup.</p>
+              <div class="threshold-group">
+                <h3>Crane lifts</h3>
+                <div class="threshold-fields">
+                  <div class="threshold-field"><label for="crane-wind-go">Sustained Go (mph)</label><input id="crane-wind-go" value="20" disabled></div>
+                  <div class="threshold-field"><label for="crane-wind-stop">Sustained No-Go (mph)</label><input id="crane-wind-stop" value="25" disabled></div>
+                  <div class="threshold-field"><label for="crane-gust-go">Gust Go (mph)</label><input id="crane-gust-go" value="25" disabled></div>
+                  <div class="threshold-field"><label for="crane-gust-stop">Gust No-Go (mph)</label><input id="crane-gust-stop" value="30" disabled></div>
+                </div>
+              </div>
+              <div class="threshold-group">
+                <h3>Concrete pours</h3>
+                <div class="threshold-fields">
+                  <div class="threshold-field"><label for="concrete-temp-go">Go minimum (°F)</label><input id="concrete-temp-go" value="40" disabled></div>
+                  <div class="threshold-field"><label for="concrete-temp-caution">Caution minimum (°F)</label><input id="concrete-temp-caution" value="35" disabled></div>
+                  <div class="threshold-field"><label for="concrete-rain-stop">No-Go rain (%)</label><input id="concrete-rain-stop" value="60" disabled></div>
+                </div>
+              </div>
+              <div class="threshold-group">
+                <h3>Roofing</h3>
+                <div class="threshold-fields">
+                  <div class="threshold-field"><label for="roof-rain-go">Rain Go limit (%)</label><input id="roof-rain-go" value="20" disabled></div>
+                  <div class="threshold-field"><label for="roof-rain-stop">Rain No-Go limit (%)</label><input id="roof-rain-stop" value="40" disabled></div>
+                  <div class="threshold-field"><label for="roof-gust-go">Gust Go limit (mph)</label><input id="roof-gust-go" value="25" disabled></div>
+                  <div class="threshold-field"><label for="roof-gust-stop">Gust No-Go limit (mph)</label><input id="roof-gust-stop" value="30" disabled></div>
+                </div>
+              </div>
+              <div class="threshold-actions">
+                <button class="button button-primary button-small" type="button" disabled>Apply Thresholds</button>
+                <button class="button button-secondary button-small" type="button" disabled>Reset to Defaults</button>
+              </div>
+              <small class="static-note">Threshold changes become available in a later build stage.</small>
+            </div>
+          </details>
+        </section>
+      </aside>
+
+      <section class="forecast-column" aria-labelledby="forecast-title">
+        <div class="forecast-heading">
+          <div>
+            <h2 id="forecast-title">7-Day Activity Forecast</h2>
+            <p>Daily conditions for each planned activity</p>
+          </div>
+          <span class="location-pill">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle>
+            </svg>
+            Provo, UT
+          </span>
+        </div>
+
+        <div class="forecast-grid" id="forecast-grid" aria-label="Seven-day sample forecast">
+          <button class="day-card" type="button" data-day="0" aria-label="View details for Wednesday, November 18" aria-pressed="true">
+            <span><span class="day-name">Today</span><span class="day-date">Nov 18</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Partly cloudy</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-go">GO</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-no-go">NO-GO</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="1" aria-label="View details for Thursday, November 19" aria-pressed="false">
+            <span><span class="day-name">Thu</span><span class="day-date">Nov 19</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Clouds</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-caution">CAUTION</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-caution">CAUTION</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-caution">CAUTION</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="2" aria-label="View details for Friday, November 20" aria-pressed="false">
+            <span><span class="day-name">Fri</span><span class="day-date">Nov 20</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☂</span>Showers</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-no-go">NO-GO</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="3" aria-label="View details for Saturday, November 21" aria-pressed="false">
+            <span><span class="day-name">Sat</span><span class="day-date">Nov 21</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Clear</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-go">GO</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="4" aria-label="View details for Sunday, November 22" aria-pressed="false">
+            <span><span class="day-name">Sun</span><span class="day-date">Nov 22</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Windy</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-caution">CAUTION</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-no-go">NO-GO</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-caution">CAUTION</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="5" aria-label="View details for Monday, November 23" aria-pressed="false">
+            <span><span class="day-name">Mon</span><span class="day-date">Nov 23</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Mostly sunny</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-caution">CAUTION</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-no-go">NO-GO</span></span>
+          </button>
+          <button class="day-card" type="button" data-day="6" aria-label="View details for Tuesday, November 24" aria-pressed="false">
+            <span><span class="day-name">Tue</span><span class="day-date">Nov 24</span></span>
+            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Breezy</span>
+            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
+            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
+            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
+          </button>
+        </div>
+        <p class="grid-hint">Select a day to view its sample conditions and rating details.</p>
+      </section>
+    </div>
+  </main>
+
+  <div class="detail-scrim" id="detail-scrim"></div>
+  <aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+    <div class="drawer-header">
+      <div>
+        <p class="drawer-eyebrow">Daily activity details · Preview</p>
+        <h2 id="detail-title">Wednesday, November 18</h2>
+      </div>
+      <button class="icon-button" id="close-details" type="button" aria-label="Close details">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="m18 6-12 12M6 6l12 12"></path>
+        </svg>
+      </button>
+    </div>
+    <div class="drawer-content" id="drawer-content">
+      <p class="drawer-intro">Sample daily weather values for the Provo jobsite. Ratings below are fixed preview content, not live calculations.</p>
+      <div class="detail-metrics" aria-label="Sample daily weather summary">
+        <div class="metric"><span class="metric-label">Low temperature</span><span class="metric-value" data-metric="low">32°F</span></div>
+        <div class="metric"><span class="metric-label">High temperature</span><span class="metric-value" data-metric="high">48°F</span></div>
+        <div class="metric"><span class="metric-label">Max sustained wind</span><span class="metric-value" data-metric="wind">15 mph</span></div>
+        <div class="metric"><span class="metric-label">Max gust</span><span class="metric-value" data-metric="gust">22 mph</span></div>
+        <div class="metric"><span class="metric-label">Max rain probability</span><span class="metric-value" data-metric="rain">10%</span></div>
+        <div class="metric"><span class="metric-label">Local forecast hours</span><span class="metric-value" data-metric="hours">24</span></div>
+      </div>
+
+      <section class="detail-activity" aria-labelledby="detail-crane">
+        <div class="detail-activity-heading"><h3 id="detail-crane">Crane Lifts</h3><span class="badge badge-go" data-badge="crane">GO</span></div>
+        <p class="detail-reason" data-reason="crane">Sustained wind: 15 mph; gust: 22 mph. GO — both values are below the Go limits of 20 mph sustained and 25 mph gust.</p>
+      </section>
+      <section class="detail-activity" aria-labelledby="detail-concrete">
+        <div class="detail-activity-heading"><h3 id="detail-concrete">Concrete Pours</h3><span class="badge badge-no-go" data-badge="concrete">NO-GO</span></div>
+        <p class="detail-reason" data-reason="concrete">Minimum temperature: 32°F; maximum rain probability: 10%. NO-GO — minimum temperature is below the 35°F lower limit.</p>
+      </section>
+      <section class="detail-activity" aria-labelledby="detail-roofing">
+        <div class="detail-activity-heading"><h3 id="detail-roofing">Roofing</h3><span class="badge badge-go" data-badge="roofing">GO</span></div>
+        <p class="detail-reason" data-reason="roofing">Maximum rain probability: 10%; maximum gust: 22 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust.</p>
+      </section>
+
+      <details class="hourly-details">
+        <summary>Raw Hourly Forecast <span style="color:#6B7280;font-weight:500;">(sample values)</span></summary>
+        <div class="hourly-table-wrap">
+          <table class="hourly-table" id="hourly-table">
+            <thead>
+              <tr><th>Local time</th><th>temperature_2m (°F)</th><th>wind_speed_10m (mph)</th><th>wind_gusts_10m (mph)</th><th>precipitation_probability (%)</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>12:00 AM</td><td>35</td><td>4</td><td>7</td><td>0</td></tr>
+              <tr><td>6:00 AM</td><td>32</td><td>6</td><td>10</td><td>0</td></tr>
+              <tr><td>12:00 PM</td><td>48</td><td>12</td><td>18</td><td>10</td></tr>
+              <tr><td>6:00 PM</td><td>41</td><td>15</td><td>22</td><td>5</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <button class="button button-secondary button-small copy-button" id="copy-table" type="button">Copy table</button>
+      </details>
+      <p class="preview-disclaimer">Layout preview only. All weather values and ratings are illustrative placeholders; no forecast API or safety calculations are connected.</p>
+    </div>
+  </aside>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script>
+    (() => {
+      "use strict";
+
+      const provo = [40.2338, -111.6585];
+      const daySamples = [
+        {
+          title: "Wednesday, November 18",
+          low: "32°F", high: "48°F", wind: "15 mph", gust: "22 mph", rain: "10%", hours: "24",
+          ratings: ["GO", "NO-GO", "GO"],
+          reasons: [
+            "Sustained wind: 15 mph; gust: 22 mph. GO — both values are below the Go limits of 20 mph sustained and 25 mph gust.",
+            "Minimum temperature: 32°F; maximum rain probability: 10%. NO-GO — minimum temperature is below the 35°F lower limit.",
+            "Maximum rain probability: 10%; maximum gust: 22 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
+          ],
+          rows: [["12:00 AM", "35", "4", "7", "0"], ["6:00 AM", "32", "6", "10", "0"], ["12:00 PM", "48", "12", "18", "10"], ["6:00 PM", "41", "15", "22", "5"]]
+        },
+        {
+          title: "Thursday, November 19",
+          low: "37°F", high: "51°F", wind: "22 mph", gust: "28 mph", rain: "30%", hours: "24",
+          ratings: ["CAUTION", "CAUTION", "CAUTION"],
+          reasons: [
+            "Sustained wind: 22 mph; gust: 28 mph. CAUTION — sustained wind is at or above 20 mph and gust is at or above 25 mph.",
+            "Minimum temperature: 37°F; maximum rain probability: 30%. CAUTION — minimum temperature is below 40°F and at least 35°F.",
+            "Maximum rain probability: 30%; maximum gust: 28 mph. CAUTION — rain is at or above 20% and gust is at or above 25 mph."
+          ],
+          rows: [["12:00 AM", "40", "9", "13", "10"], ["6:00 AM", "37", "11", "16", "10"], ["12:00 PM", "51", "18", "25", "20"], ["6:00 PM", "45", "22", "28", "30"]]
+        },
+        {
+          title: "Friday, November 20",
+          low: "43°F", high: "56°F", wind: "27 mph", gust: "34 mph", rain: "45%", hours: "24",
+          ratings: ["NO-GO", "GO", "NO-GO"],
+          reasons: [
+            "Sustained wind: 27 mph; gust: 34 mph. NO-GO — sustained wind is at or above 25 mph and gust is at or above 30 mph.",
+            "Minimum temperature: 43°F; maximum rain probability: 45%. GO — minimum temperature is at least 40°F and rain is below 60%.",
+            "Maximum rain probability: 45%; maximum gust: 34 mph. NO-GO — rain probability is at or above 40% and gust is at or above 30 mph."
+          ],
+          rows: [["12:00 AM", "46", "12", "17", "10"], ["6:00 AM", "43", "15", "20", "20"], ["12:00 PM", "56", "23", "31", "35"], ["6:00 PM", "49", "27", "34", "45"]]
+        },
+        {
+          title: "Saturday, November 21",
+          low: "44°F", high: "62°F", wind: "18 mph", gust: "24 mph", rain: "8%", hours: "24",
+          ratings: ["GO", "GO", "GO"],
+          reasons: [
+            "Sustained wind: 18 mph; gust: 24 mph. GO — both values are below the Go limits of 20 mph sustained and 25 mph gust.",
+            "Minimum temperature: 44°F; maximum rain probability: 8%. GO — minimum temperature is at least 40°F and rain is below 60%.",
+            "Maximum rain probability: 8%; maximum gust: 24 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
+          ],
+          rows: [["12:00 AM", "48", "8", "12", "0"], ["6:00 AM", "44", "9", "14", "0"], ["12:00 PM", "62", "16", "21", "5"], ["6:00 PM", "54", "18", "24", "8"]]
+        },
+        {
+          title: "Sunday, November 22",
+          low: "33°F", high: "48°F", wind: "21 mph", gust: "27 mph", rain: "35%", hours: "24",
+          ratings: ["CAUTION", "NO-GO", "CAUTION"],
+          reasons: [
+            "Sustained wind: 21 mph; gust: 27 mph. CAUTION — sustained wind is at or above 20 mph and gust is at or above 25 mph.",
+            "Minimum temperature: 33°F; maximum rain probability: 35%. NO-GO — minimum temperature is below the 35°F lower limit.",
+            "Maximum rain probability: 35%; maximum gust: 27 mph. CAUTION — rain is at or above the 20% Go limit but below 40%; gust is at or above 25 mph but below 30 mph."
+          ],
+          rows: [["12:00 AM", "37", "12", "18", "25"], ["6:00 AM", "33", "15", "22", "30"], ["12:00 PM", "48", "20", "25", "35"], ["6:00 PM", "40", "21", "27", "30"]]
+        },
+        {
+          title: "Monday, November 23",
+          low: "38°F", high: "53°F", wind: "16 mph", gust: "31 mph", rain: "25%", hours: "24",
+          ratings: ["NO-GO", "CAUTION", "NO-GO"],
+          reasons: [
+            "Sustained wind: 16 mph; gust: 31 mph. NO-GO — gust is at or above the 30 mph No-Go limit.",
+            "Minimum temperature: 38°F; maximum rain probability: 25%. CAUTION — minimum temperature is below 40°F and at least 35°F.",
+            "Maximum rain probability: 25%; maximum gust: 31 mph. NO-GO — gust is at or above 30 mph."
+          ],
+          rows: [["12:00 AM", "41", "6", "10", "0"], ["6:00 AM", "38", "8", "12", "5"], ["12:00 PM", "53", "16", "23", "10"], ["6:00 PM", "45", "14", "31", "25"]]
+        },
+        {
+          title: "Tuesday, November 24",
+          low: "42°F", high: "58°F", wind: "26 mph", gust: "23 mph", rain: "12%", hours: "24",
+          ratings: ["NO-GO", "GO", "GO"],
+          reasons: [
+            "Sustained wind: 26 mph; gust: 33 mph. NO-GO — sustained wind is at or above 25 mph and gust is at or above 30 mph.",
+            "Minimum temperature: 42°F; maximum rain probability: 12%. GO — minimum temperature is at least 40°F and rain is below 60%.",
+            "Maximum rain probability: 12%; maximum gust: 22 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
+          ],
+          rows: [["12:00 AM", "45", "11", "16", "5"], ["6:00 AM", "42", "12", "18", "5"], ["12:00 PM", "58", "21", "23", "8"], ["6:00 PM", "50", "26", "23", "12"]]
+        }
+      ];
+
+      const drawer = document.getElementById("detail-drawer");
+      const scrim = document.getElementById("detail-scrim");
+      const grid = document.getElementById("forecast-grid");
+      const closeButton = document.getElementById("close-details");
+      const resetButton = document.getElementById("reset-provo");
+      let map = null;
+      let marker = null;
+      let lastFocusedCard = null;
+
+      function setBadge(element, rating) {
+        element.textContent = rating;
+        element.className = "badge " + (
+          rating === "GO" ? "badge-go" :
+          rating === "CAUTION" ? "badge-caution" : "badge-no-go"
+        );
+      }
+
+      function renderSampleDay(index) {
+        const sample = daySamples[index];
+        document.getElementById("detail-title").textContent = sample.title;
+        for (const key of ["low", "high", "wind", "gust", "rain", "hours"]) {
+          document.querySelector(`[data-metric="${key}"]`).textContent = sample[key];
+        }
+        ["crane", "concrete", "roofing"].forEach((activity, i) => {
+          setBadge(document.querySelector(`[data-badge="${activity}"]`), sample.ratings[i]);
+          document.querySelector(`[data-reason="${activity}"]`).textContent = sample.reasons[i];
+        });
+        const tbody = document.querySelector("#hourly-table tbody");
+        tbody.replaceChildren(...sample.rows.map(row => {
+          const tr = document.createElement("tr");
+          row.forEach(value => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            tr.append(cell);
+          });
+          return tr;
+        }));
+      }
+
+      function openDrawer(index, card) {
+        renderSampleDay(index);
+        drawer.hidden = false;
+        scrim.hidden = false;
+        if (card) {
+          lastFocusedCard = card;
+          card.setAttribute("aria-pressed", "true");
+        }
+        closeButton.focus();
+      }
+
+      function closeDrawer() {
+        drawer.hidden = true;
+        scrim.hidden = true;
+        grid.querySelectorAll(".day-card").forEach(card => card.setAttribute("aria-pressed", "false"));
+        if (lastFocusedCard) lastFocusedCard.focus();
+      }
+
+      grid.addEventListener("click", event => {
+        const card = event.target.closest(".day-card");
+        if (!card) return;
+        grid.querySelectorAll(".day-card").forEach(item => item.setAttribute("aria-pressed", "false"));
+        openDrawer(Number(card.dataset.day), card);
+      });
+
+      closeButton.addEventListener("click", closeDrawer);
+      scrim.addEventListener("click", closeDrawer);
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && !drawer.hidden) closeDrawer();
+      });
+
+      resetButton.addEventListener("click", () => {
+        document.getElementById("latitude").value = "40.2338";
+        document.getElementById("longitude").value = "111.6585";
+        document.getElementById("map-status").textContent = "Provo jobsite";
+        if (map) {
+          map.setView(provo, 11);
+          marker.setLatLng(provo).openPopup();
+        }
+      });
+
+      document.querySelectorAll(".thresholds summary").forEach(summary => {
+        summary.addEventListener("click", () => {
+          const section = summary.parentElement;
+          window.setTimeout(() => {
+            summary.setAttribute("aria-expanded", String(section.open));
+          }, 0);
+        });
+      });
+
+      document.getElementById("copy-table").addEventListener("click", async event => {
+        const table = document.getElementById("hourly-table");
+        const text = Array.from(table.rows, row =>
+          Array.from(row.cells, cell => cell.textContent.trim()).join("\t")
+        ).join("\n");
+        const button = event.currentTarget;
+        try {
+          await navigator.clipboard.writeText(text);
+          button.textContent = "Copied";
+          window.setTimeout(() => { button.textContent = "Copy table"; }, 1600);
+        } catch {
+          button.textContent = "Copy unavailable";
+          window.setTimeout(() => { button.textContent = "Copy table"; }, 1800);
+        }
+      });
+
+      if (window.L) {
+        map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).setView(provo, 11);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          maxZoom: 19,
+          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        marker = L.marker(provo).addTo(map).bindPopup("Provo, UT jobsite").openPopup();
+      } else {
+        document.getElementById("map-fallback").style.display = "grid";
+        document.getElementById("map-status").textContent = "Map preview";
+      }
+
+      window.setTimeout(() => openDrawer(0, grid.querySelector(".day-card")), 0);
+    })();
+  </script>
+</body>
+</html>
