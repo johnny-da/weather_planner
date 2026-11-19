@@ -246,13 +246,66 @@
       padding: 16px;
     }
 
-    .coordinates {
+    .location-search-row {
+      display: flex;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .location-search-row .field {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .location-search-row .button {
+      align-self: end;
+      min-height: 42px;
+    }
+
+    .location-search-results {
+      margin-top: 8px;
+      padding: 4px;
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
+      gap: 2px;
+      background: #FFFFFF;
+      border: 1px solid #CBD5E1;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgb(17 24 39 / 8%);
+    }
+
+    .location-search-result {
+      width: 100%;
+      padding: 9px 10px;
+      color: #1F2937;
+      text-align: left;
+      background: transparent;
+      border: 0;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    .location-search-result:hover,
+    .location-search-result:focus-visible {
+      background: #EFF6FF;
+    }
+
+    .location-search-status {
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .location-search-status[data-state="error"] {
+      color: #991B1B;
+    }
+
+    .location-search-status[data-state="pending"] {
+      color: #92400E;
     }
 
     .field label,
+    .location-search > label,
     .threshold-field label {
       display: block;
       margin-bottom: 6px;
@@ -540,6 +593,23 @@
 
     .location-pill svg {
       color: var(--blue);
+    }
+
+    .forecast-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .crew-brief-status {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .crew-brief-status[data-state="error"] {
+      color: #991B1B;
     }
 
     .forecast-grid {
@@ -1031,6 +1101,10 @@
         font-size: 11px;
       }
 
+      .forecast-actions {
+        flex-wrap: wrap;
+      }
+
       .forecast-grid {
         grid-template-columns: minmax(0, 1fr);
         gap: 8px;
@@ -1198,24 +1272,22 @@
           </div>
           <div id="map" role="region" aria-label="Map preview centered on the Provo, Utah jobsite">
             <div class="map-fallback" id="map-fallback">
-              <p><strong>Loading interactive map…</strong>If the map service is unavailable, you can still enter coordinates and use the forecast controls.</p>
+              <p><strong>Loading interactive map…</strong>If the map service is unavailable, you can still search for a location and use the forecast controls.</p>
             </div>
           </div>
           <div class="location-controls">
-            <div class="coordinates">
-              <div class="field">
-                <label for="latitude">Latitude (°N)</label>
-                <input id="latitude" type="number" value="40.2338" step="0.0001" min="-90" max="90" inputmode="decimal" aria-describedby="latitude-error">
-                <small class="field-error" id="latitude-error" hidden></small>
+            <div class="location-search">
+              <label for="location-search-input">Location search</label>
+              <div class="location-search-row">
+                <div class="field">
+                  <input id="location-search-input" type="text" value="Provo, UT" maxlength="120" autocomplete="off" placeholder="Search for a city or location (e.g., Provo, UT)" aria-describedby="location-search-status">
+                </div>
+                <button class="button button-primary" type="button" id="search-location">Search</button>
               </div>
-              <div class="field">
-                <label for="longitude">Longitude (°W)</label>
-                <input id="longitude" type="number" value="111.6585" step="0.0001" min="0" max="180" inputmode="decimal" aria-describedby="longitude-error">
-                <small class="field-error" id="longitude-error" hidden></small>
-              </div>
+              <div class="location-search-results" id="location-search-results" role="listbox" aria-label="Location search results" hidden></div>
+              <p class="location-search-status" id="location-search-status" role="status" aria-live="polite" hidden></p>
             </div>
             <div class="control-actions">
-              <button class="button button-primary" type="button" id="apply-location">Apply Location</button>
               <button class="button button-secondary button-small" type="button" id="reset-provo" disabled>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path><path d="M3 3v5h5"></path>
@@ -1223,7 +1295,7 @@
                 Reset to Provo
               </button>
             </div>
-            <p class="location-note">Enter coordinates or select a point on the map, then apply to request its forecast. Ratings update when you change the location or thresholds.</p>
+            <p class="location-note">Search for a city or select a point on the map, then choose Search to load its forecast. Ratings update when you change the location or thresholds.</p>
           </div>
         </section>
 
@@ -1286,13 +1358,17 @@
             <h2 id="forecast-title">7-Day Activity Forecast</h2>
             <p>Daily conditions for each planned activity</p>
           </div>
-          <span class="location-pill">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle>
-            </svg>
-            <span id="forecast-location">Provo, UT</span>
-          </span>
+          <div class="forecast-actions">
+            <span class="location-pill">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle>
+              </svg>
+              <span id="forecast-location">Provo, UT</span>
+            </span>
+            <button class="button button-secondary button-small" id="copy-crew-brief" type="button" disabled>Copy Crew Brief</button>
+          </div>
         </div>
+        <p class="crew-brief-status" id="crew-brief-status" role="status" aria-live="polite" hidden></p>
 
         <div class="forecast-state" id="forecast-state" data-state="loading" role="status" aria-live="polite">
           <span id="forecast-state-message">Requesting the initial Provo forecast…</span>
@@ -1383,21 +1459,23 @@
       const grid = document.getElementById("forecast-grid");
       const gridHint = document.querySelector(".grid-hint");
       const pourWindowBanner = document.getElementById("pour-window-banner");
+      const copyCrewBriefButton = document.getElementById("copy-crew-brief");
+      const crewBriefStatus = document.getElementById("crew-brief-status");
       const forecastBanner = document.getElementById("forecast-banner");
       const closeButton = document.getElementById("close-details");
       const resetButton = document.getElementById("reset-provo");
-      const applyLocationButton = document.getElementById("apply-location");
+      const locationSearchInput = document.getElementById("location-search-input");
+      const searchLocationButton = document.getElementById("search-location");
+      const locationSearchResults = document.getElementById("location-search-results");
+      const locationSearchStatus = document.getElementById("location-search-status");
       const retryForecastButton = document.getElementById("retry-forecast");
       const useCachedForecastButton = document.getElementById("use-cached-forecast");
-      const latitudeInput = document.getElementById("latitude");
-      const longitudeInput = document.getElementById("longitude");
-      const latitudeError = document.getElementById("latitude-error");
-      const longitudeError = document.getElementById("longitude-error");
       const forecastState = document.getElementById("forecast-state");
       const forecastStateMessage = document.getElementById("forecast-state-message");
       const hourlyDetails = document.querySelector(".hourly-details");
       const hourlyTableBody = document.querySelector("#hourly-table tbody");
       const forecastEndpoint = "https://api.open-meteo.com/v1/forecast";
+      const geocodingEndpoint = "https://geocoding-api.open-meteo.com/v1/search";
       const hourlyParameters = [
         "temperature_2m",
         "wind_speed_10m",
@@ -1448,48 +1526,26 @@
       let lastFocusedCard = null;
       let selectedForecastDate = null;
       let isLoadingForecast = false;
+      let isSearchingLocation = false;
+      let pendingMapCoordinates = null;
+      let locationSearchRequestId = 0;
       let latestHourlyForecast = null;
       let latestDailyRatings = null;
       let lastSuccessfulForecast = null;
+      let crewBriefCopyTimer = null;
+      let crewBriefGeneration = 0;
+      let isCopyingCrewBrief = false;
       let activeThresholds = { ...defaultThresholds };
-      let lastRequestedCoordinates = { latitude: provo[0], longitudeWest: Math.abs(provo[1]) };
-
-      function validateCoordinateValues(latitudeText, longitudeText) {
-        const decimalPattern = /^-?\d+(?:\.\d{1,4})?$/;
-        const errors = { latitude: "", longitude: "" };
-        const latitudeValue = latitudeText.trim();
-        const longitudeValue = longitudeText.trim();
-
-        if (!latitudeValue) {
-          errors.latitude = "Enter a latitude.";
-        } else if (!decimalPattern.test(latitudeValue)) {
-          errors.latitude = "Enter a number with no more than 4 decimal places.";
-        } else if (Number(latitudeValue) < -90 || Number(latitudeValue) > 90) {
-          errors.latitude = "Latitude must be between -90 and 90.";
-        }
-
-        if (!longitudeValue) {
-          errors.longitude = "Enter a longitude in degrees west.";
-        } else if (!decimalPattern.test(longitudeValue)) {
-          errors.longitude = "Enter a number with no more than 4 decimal places.";
-        } else if (Number(longitudeValue) < 0 || Number(longitudeValue) > 180) {
-          errors.longitude = "Longitude must be between 0 and 180 degrees west.";
-        }
-
-        return {
-          valid: !errors.latitude && !errors.longitude,
-          errors,
-          coordinates: {
-            latitude: Number(latitudeValue),
-            longitudeWest: Number(longitudeValue)
-          }
-        };
-      }
+      let lastRequestedCoordinates = {
+        latitude: provo[0],
+        longitude: provo[1],
+        locationName: "Provo, UT"
+      };
 
       function buildForecastRequestUrl(coordinates) {
         const query = new URLSearchParams({
           latitude: String(coordinates.latitude),
-          longitude: String(-Math.abs(coordinates.longitudeWest)),
+          longitude: String(coordinates.longitude),
           hourly: hourlyParameters.join(","),
           temperature_unit: "fahrenheit",
           wind_speed_unit: "mph",
@@ -1809,6 +1865,58 @@
         };
       }
 
+      function buildCrewBriefText(days, location, timezone) {
+        if (!Array.isArray(days) || days.length !== 7) {
+          throw new Error("A complete seven-day forecast is required to create the crew brief.");
+        }
+
+        const pourWindowResult = calculateBestThreeDayPourWindow(days);
+        const lines = [
+          `JOBSITE WEATHER BRIEF — ${location}`,
+          `Forecast: ${formatForecastDate(days[0].date, { month: "short", day: "numeric", year: "numeric" })}–${formatForecastDate(days[days.length - 1].date, { month: "short", day: "numeric", year: "numeric" })} (${timezone})`,
+          ""
+        ];
+
+        if (pourWindowResult.window) {
+          const window = pourWindowResult.window;
+          lines.push(
+            `BEST 3-DAY POUR WINDOW: ${formatForecastDate(window.startDate, { month: "short", day: "numeric", year: "numeric" })}–${formatForecastDate(window.endDate, { month: "short", day: "numeric", year: "numeric" })}`,
+            `Concrete ratings: ${window.goCount} Go, ${window.cautionCount} Caution, ${window.noGoCount} No-Go`,
+            `Coldest overnight low: ${formatForecastValue(window.coldestNightMinimum, "°F")} · Worst daily rain probability: ${formatForecastValue(window.worstDayRainProbability, "%")}`
+          );
+          if (!pourWindowResult.noGoFreeWindowExists) {
+            lines.push("Best available only — no No-Go-free 3-day window could be confirmed.");
+          }
+        } else {
+          lines.push("BEST 3-DAY POUR WINDOW: Unable to rank — forecast data incomplete");
+        }
+
+        days.forEach(day => {
+          lines.push("", formatForecastDate(day.date, { weekday: "long", month: "long", day: "numeric" }));
+          [
+            ["Crane Lifts", "crane", `Sustained wind ${formatForecastValue(day.maximumSustainedWind, " mph")}; gust ${formatForecastValue(day.maximumGust, " mph")}`],
+            ["Concrete Pours", "concrete", `Minimum temperature ${formatForecastValue(day.minimumTemperature, "°F")}; maximum rain probability ${formatForecastValue(day.maximumRainProbability, "%")}`],
+            ["Roofing", "roofing", `Maximum rain probability ${formatForecastValue(day.maximumRainProbability, "%")}; maximum gust ${formatForecastValue(day.maximumGust, " mph")}`]
+          ].forEach(([name, key, observedValues]) => {
+            const rating = day.activities[key];
+            if (rating.status === "GO") {
+              lines.push(`${name}: GO`);
+              return;
+            }
+
+            if (rating.reason.includes("Data incomplete")) {
+              lines.push(`${name}: ${rating.status} — ${rating.reason}`);
+              return;
+            }
+
+            const warning = rating.reason.split(" — ").slice(1).join(" — ").replace(/[.]$/, "");
+            lines.push(`${name}: ${rating.status} — ${observedValues}; ${warning}`);
+          });
+        });
+
+        return lines.join("\n");
+      }
+
       function logForecastCalculations(forecast, dailyRatings, coordinates) {
         console.groupCollapsed(
           `Jobsite Weather Planner forecast · ${formatLocationLabel(coordinates)} · ${dailyRatings.length} days`
@@ -1969,19 +2077,21 @@
       }
 
       function formatLocationLabel(coordinates) {
+        if (coordinates.locationName) return coordinates.locationName;
         if (
           coordinates.latitude === provo[0] &&
-          coordinates.longitudeWest === Math.abs(provo[1])
+          coordinates.longitude === provo[1]
         ) {
           return "Provo, UT";
         }
-        return `${coordinates.latitude.toFixed(4)}, ${(-coordinates.longitudeWest).toFixed(4)}`;
+        return `${coordinates.latitude.toFixed(4)}, ${coordinates.longitude.toFixed(4)}`;
       }
 
       function updateSelectedLocation(coordinates) {
         const label = formatLocationLabel(coordinates);
         document.getElementById("map-location-label").textContent = label;
         document.getElementById("forecast-location").textContent = label;
+        locationSearchInput.value = label;
       }
 
       function showForecastState(state, message, canRetry = false, canUseCachedForecast = false) {
@@ -1997,36 +2107,190 @@
         grid.hidden = true;
         gridHint.hidden = true;
         clearBestThreeDayPourWindow();
+        crewBriefGeneration += 1;
+        window.clearTimeout(crewBriefCopyTimer);
+        crewBriefCopyTimer = null;
+        isCopyingCrewBrief = false;
+        copyCrewBriefButton.textContent = "Copy Crew Brief";
+        crewBriefStatus.textContent = "";
+        crewBriefStatus.hidden = true;
+        crewBriefStatus.dataset.state = "";
+        updateCrewBriefButtonState();
         selectedForecastDate = null;
         lastFocusedCard = null;
       }
 
-      function showCoordinateErrors(errors) {
-        [[latitudeInput, latitudeError, errors.latitude], [longitudeInput, longitudeError, errors.longitude]]
-          .forEach(([input, messageElement, message]) => {
-            input.setAttribute("aria-invalid", message ? "true" : "false");
-            messageElement.textContent = message;
-            messageElement.hidden = !message;
-          });
-      }
-
       function setForecastLoading(isLoading) {
         isLoadingForecast = isLoading;
-        applyLocationButton.disabled = isLoading;
-        applyLocationButton.textContent = isLoading ? "Loading..." : "Apply Location";
-        resetButton.disabled = isLoading;
+        locationSearchInput.disabled = isLoading || isSearchingLocation;
+        searchLocationButton.disabled = isLoading || isSearchingLocation;
+        searchLocationButton.textContent = isLoading ? "Loading..." : "Search";
+        resetButton.disabled = isLoading || isSearchingLocation;
         retryForecastButton.disabled = isLoading;
         useCachedForecastButton.disabled = isLoading;
-        latitudeInput.disabled = isLoading;
-        longitudeInput.disabled = isLoading;
+        updateCrewBriefButtonState();
         if (map) {
-          if (isLoading) {
+          if (isLoading || isSearchingLocation) {
             map.dragging.disable();
             marker.dragging.disable();
           } else {
             map.dragging.enable();
             marker.dragging.enable();
           }
+        }
+      }
+
+      function setLocationSearchLoading(isLoading) {
+        isSearchingLocation = isLoading;
+        locationSearchInput.disabled = isLoading || isLoadingForecast;
+        searchLocationButton.disabled = isLoading || isLoadingForecast;
+        searchLocationButton.textContent = isLoading ? "Searching..." : "Search";
+        resetButton.disabled = isLoading || isLoadingForecast;
+        if (map) {
+          if (isLoading || isLoadingForecast) {
+            map.dragging.disable();
+            marker.dragging.disable();
+          } else {
+            map.dragging.enable();
+            marker.dragging.enable();
+          }
+        }
+      }
+
+      function setLocationSearchStatus(message, state = "") {
+        locationSearchStatus.textContent = message;
+        locationSearchStatus.dataset.state = state;
+        locationSearchStatus.hidden = !message;
+      }
+
+      function clearLocationSearchResults() {
+        locationSearchResults.replaceChildren();
+        locationSearchResults.hidden = true;
+      }
+
+      function buildGeocodingRequestUrl(query) {
+        const parameters = new URLSearchParams({
+          name: query,
+          count: "5",
+          language: "en",
+          format: "json"
+        });
+        return `${geocodingEndpoint}?${parameters.toString()}`;
+      }
+
+      function formatGeocodingResultLabel(result) {
+        const country = result.country_code === "US" ? "" : result.country;
+        const parts = [result.name, result.admin1, country]
+          .filter((part, index, values) => part && values.indexOf(part) === index);
+        return parts.join(", ");
+      }
+
+      function validateGeocodingResult(result) {
+        return result &&
+          typeof result.name === "string" &&
+          Number.isFinite(result.latitude) &&
+          result.latitude >= -90 &&
+          result.latitude <= 90 &&
+          Number.isFinite(result.longitude) &&
+          result.longitude >= -180 &&
+          result.longitude <= 180;
+      }
+
+      async function selectGeocodedLocation(result) {
+        if (!validateGeocodingResult(result)) {
+          setLocationSearchStatus("This location result is incomplete. Search again or choose another result.", "error");
+          return;
+        }
+
+        const coordinates = {
+          latitude: result.latitude,
+          longitude: result.longitude,
+          locationName: formatGeocodingResultLabel(result)
+        };
+        pendingMapCoordinates = null;
+        clearLocationSearchResults();
+        setLocationSearchStatus("", "");
+        updateSelectedLocation(coordinates);
+        const point = [coordinates.latitude, coordinates.longitude];
+        if (marker) marker.setLatLng(point).bindPopup(`${coordinates.locationName} jobsite`).openPopup();
+        if (map) map.setView(point, map.getZoom());
+        await loadForecastForLocation(coordinates);
+      }
+
+      function showGeocodingResults(results) {
+        locationSearchResults.replaceChildren(...results.map(result => {
+          const option = document.createElement("button");
+          option.className = "location-search-result";
+          option.type = "button";
+          option.setAttribute("role", "option");
+          option.setAttribute("aria-selected", "false");
+          option.textContent = formatGeocodingResultLabel(result);
+          option.addEventListener("click", () => selectGeocodedLocation(result));
+          return option;
+        }));
+        locationSearchResults.hidden = false;
+        setLocationSearchStatus("Choose the matching city or region.", "success");
+      }
+
+      async function searchLocation() {
+        if (isLoadingForecast || isSearchingLocation) return;
+        clearLocationSearchResults();
+
+        if (pendingMapCoordinates) {
+          const coordinates = pendingMapCoordinates;
+          pendingMapCoordinates = null;
+          setLocationSearchStatus("", "");
+          updateSelectedLocation(coordinates);
+          const point = [coordinates.latitude, coordinates.longitude];
+          if (marker) marker.setLatLng(point).bindPopup(`${formatLocationLabel(coordinates)} jobsite`).openPopup();
+          if (map) map.setView(point, map.getZoom());
+          await loadForecastForLocation(coordinates);
+          return;
+        }
+
+        const query = locationSearchInput.value.trim();
+        if (!query) {
+          locationSearchInput.setAttribute("aria-invalid", "true");
+          setLocationSearchStatus("Enter a city or location to search.", "error");
+          locationSearchInput.focus();
+          return;
+        }
+
+        locationSearchInput.removeAttribute("aria-invalid");
+        const requestId = ++locationSearchRequestId;
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+        setLocationSearchLoading(true);
+        setLocationSearchStatus("Searching for locations…", "pending");
+        try {
+          const response = await fetch(buildGeocodingRequestUrl(query), { signal: controller.signal });
+          if (!response.ok) {
+            throw new Error(`Location search returned HTTP ${response.status}.`);
+          }
+          const payload = await response.json();
+          if (requestId !== locationSearchRequestId) return;
+          const results = Array.isArray(payload?.results)
+            ? payload.results.filter(validateGeocodingResult).slice(0, 5)
+            : [];
+          if (!results.length) {
+            locationSearchInput.setAttribute("aria-invalid", "true");
+            setLocationSearchStatus("Location not found. Try a city and state, such as Provo, UT.", "error");
+          } else if (results.length === 1) {
+            await selectGeocodedLocation(results[0]);
+          } else {
+            showGeocodingResults(results);
+          }
+        } catch (error) {
+          if (requestId === locationSearchRequestId) {
+            const message = error.name === "AbortError"
+              ? "Location search timed out. Check your connection and try again."
+              : "Location search is unavailable right now. Check your connection and try again.";
+            setLocationSearchStatus(message, "error");
+            console.error("Unable to search for the location:", error);
+          }
+        } finally {
+          window.clearTimeout(timeoutId);
+          if (requestId === locationSearchRequestId) setLocationSearchLoading(false);
         }
       }
 
@@ -2091,13 +2355,13 @@
         lastSuccessfulForecast.dailyRatings = latestDailyRatings;
         const coordinates = lastSuccessfulForecast.coordinates;
         lastRequestedCoordinates = { ...coordinates };
-        latitudeInput.value = coordinates.latitude.toFixed(4);
-        longitudeInput.value = coordinates.longitudeWest.toFixed(4);
-        showCoordinateErrors({ latitude: "", longitude: "" });
+        pendingMapCoordinates = null;
+        clearLocationSearchResults();
+        setLocationSearchStatus("", "");
         updateSelectedLocation(coordinates);
-        const point = [coordinates.latitude, -coordinates.longitudeWest];
+        const point = [coordinates.latitude, coordinates.longitude];
         if (marker) marker.setLatLng(point).bindPopup(`${formatLocationLabel(coordinates)} jobsite`).openPopup();
-        if (map) map.setView(point, coordinates.latitude === provo[0] && coordinates.longitudeWest === Math.abs(provo[1]) ? 11 : map.getZoom());
+        if (map) map.setView(point, coordinates.latitude === provo[0] && coordinates.longitude === provo[1] ? 11 : map.getZoom());
         document.getElementById("map-status").className = "map-status is-pending";
         document.getElementById("map-status").textContent = "Using cached forecast";
         logForecastCalculations(latestHourlyForecast, latestDailyRatings, coordinates);
@@ -2109,86 +2373,42 @@
         );
       }
 
-      function clearCoordinateError(input, errorElement) {
-        input.removeAttribute("aria-invalid");
-        errorElement.textContent = "";
-        errorElement.hidden = true;
-      }
-
       function setCoordinatesFromMap(latitude, longitude) {
-        if (isLoadingForecast) return;
-        if (longitude > 0) {
-          clearDisplayedForecast();
-          forecastBanner.lastChild.textContent = "Location unavailable";
-          const currentLocation = validateCoordinateValues(latitudeInput.value, longitudeInput.value);
-          if (currentLocation.valid && marker) {
-            marker.setLatLng([
-              currentLocation.coordinates.latitude,
-              -currentLocation.coordinates.longitudeWest
-            ]);
-          }
-          showCoordinateErrors({
-            latitude: "",
-            longitude: "The Longitude (°W) field accepts western-hemisphere locations only."
-          });
-          document.getElementById("map-status").className = "map-status is-error";
-          document.getElementById("map-status").textContent = "East longitude unavailable";
-          showForecastState(
-            "error",
-            "This location form accepts degrees west only. Enter a supported western-hemisphere coordinate or select another map point."
-          );
-          return;
-        }
+        if (isLoadingForecast || isSearchingLocation) return;
         const latitudeValue = Number(latitude.toFixed(4));
-        const longitudeWest = Number(Math.abs(longitude).toFixed(4));
-        latitudeInput.value = latitudeValue.toFixed(4);
-        longitudeInput.value = longitudeWest.toFixed(4);
+        const longitudeValue = Number(longitude.toFixed(4));
+        const coordinates = {
+          latitude: latitudeValue,
+          longitude: longitudeValue,
+          locationName: `${latitudeValue.toFixed(4)}, ${longitudeValue.toFixed(4)}`
+        };
+        pendingMapCoordinates = coordinates;
+        locationSearchInput.value = `Map selection: ${coordinates.locationName}`;
+        clearLocationSearchResults();
+        setLocationSearchStatus("Map point selected. Choose Search to load its forecast.", "pending");
         clearDisplayedForecast();
-        forecastBanner.lastChild.textContent = "Location changed · apply to refresh";
-        showCoordinateErrors({ latitude: "", longitude: "" });
-        marker.setLatLng([latitudeValue, -longitudeWest]).bindPopup("Selected jobsite").openPopup();
-        updateSelectedLocation({ latitude: latitudeValue, longitudeWest });
-        document.getElementById("map-status").className = "map-status is-pending";
-        document.getElementById("map-status").textContent = "Apply to load forecast";
-        showForecastState(
-          "pending",
-          "Location selected. Choose Apply Location to fetch the forecast and calculate ratings."
-        );
-      }
-
-      async function applySelectedLocation() {
-        const result = validateCoordinateValues(latitudeInput.value, longitudeInput.value);
-        showCoordinateErrors(result.errors);
-        if (!result.valid) {
-          const firstInvalid = result.errors.latitude ? latitudeInput : longitudeInput;
-          firstInvalid.focus();
-          showForecastState("error", "Correct the highlighted coordinates before applying the location.");
-          document.getElementById("map-status").className = "map-status is-error";
-          document.getElementById("map-status").textContent = "Check coordinates";
-          return;
-        }
-
-        const coordinates = result.coordinates;
-        if (marker) {
-          marker
-            .setLatLng([coordinates.latitude, -coordinates.longitudeWest])
-            .bindPopup(`${formatLocationLabel(coordinates)} jobsite`)
-            .openPopup();
-        }
-        if (map) map.setView([coordinates.latitude, -coordinates.longitudeWest], map.getZoom());
+        forecastBanner.lastChild.textContent = "Location changed · search to refresh";
+        marker.setLatLng([latitudeValue, longitudeValue]).bindPopup("Selected jobsite").openPopup();
         updateSelectedLocation(coordinates);
-        await loadForecastForLocation(coordinates);
+        locationSearchInput.value = `Map selection: ${coordinates.locationName}`;
+        document.getElementById("map-status").className = "map-status is-pending";
+        document.getElementById("map-status").textContent = "Search to load forecast";
+        showForecastState("pending", "Map point selected. Choose Search to fetch the forecast and calculate ratings.");
       }
 
       async function resetLocationToProvo() {
-        if (isLoadingForecast) return;
-        latitudeInput.value = provo[0].toFixed(4);
-        longitudeInput.value = Math.abs(provo[1]).toFixed(4);
-        showCoordinateErrors({ latitude: "", longitude: "" });
+        if (isLoadingForecast || isSearchingLocation) return;
+        pendingMapCoordinates = null;
+        clearLocationSearchResults();
+        setLocationSearchStatus("", "");
+        const coordinates = {
+          latitude: provo[0],
+          longitude: provo[1],
+          locationName: "Provo, UT"
+        };
+        updateSelectedLocation(coordinates);
         if (marker) marker.setLatLng(provo).bindPopup("Provo, UT jobsite").openPopup();
         map?.setView(provo, 11);
-        const coordinates = { latitude: provo[0], longitudeWest: Math.abs(provo[1]) };
-        updateSelectedLocation(coordinates);
         await loadForecastForLocation(coordinates);
       }
 
@@ -2210,6 +2430,64 @@
 
       function formatForecastValue(value, unit = "") {
         return typeof value === "number" && Number.isFinite(value) ? `${value}${unit}` : "—";
+      }
+
+      function updateCrewBriefButtonState() {
+        copyCrewBriefButton.disabled = isLoadingForecast ||
+          isCopyingCrewBrief ||
+          !latestDailyRatings ||
+          latestDailyRatings.length !== 7 ||
+          grid.hidden;
+      }
+
+      function showCrewBriefStatus(message, state) {
+        crewBriefStatus.textContent = message;
+        crewBriefStatus.dataset.state = state;
+        crewBriefStatus.hidden = !message;
+      }
+
+      async function copyCrewBrief() {
+        if (copyCrewBriefButton.disabled || !latestDailyRatings || !latestHourlyForecast) return;
+        const generation = crewBriefGeneration;
+        isCopyingCrewBrief = true;
+        showCrewBriefStatus("", "");
+        updateCrewBriefButtonState();
+
+        try {
+          if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function") {
+            throw new Error("Clipboard access is unavailable in this browser context.");
+          }
+          const text = buildCrewBriefText(
+            latestDailyRatings,
+            document.getElementById("forecast-location").textContent,
+            latestHourlyForecast.timezone || "location timezone"
+          );
+          await navigator.clipboard.writeText(text);
+          if (generation !== crewBriefGeneration) return;
+
+          copyCrewBriefButton.textContent = "Copied!";
+          showCrewBriefStatus("Crew brief copied to the clipboard.", "success");
+          window.clearTimeout(crewBriefCopyTimer);
+          crewBriefCopyTimer = window.setTimeout(() => {
+            if (generation !== crewBriefGeneration) return;
+            copyCrewBriefButton.textContent = "Copy Crew Brief";
+            showCrewBriefStatus("", "");
+            updateCrewBriefButtonState();
+          }, 2000);
+        } catch (error) {
+          if (generation === crewBriefGeneration) {
+            showCrewBriefStatus(
+              "Copy failed — clipboard access was denied or unavailable. Check browser permissions and try again.",
+              "error"
+            );
+            console.error("Unable to copy the crew brief:", error);
+          }
+        } finally {
+          if (generation === crewBriefGeneration) {
+            isCopyingCrewBrief = false;
+            updateCrewBriefButtonState();
+          }
+        }
       }
 
       function renderBestThreeDayPourWindow(result) {
@@ -2360,6 +2638,7 @@
         grid.setAttribute("aria-label", `${days.length}-day activity forecast`);
         grid.hidden = cards.length === 0;
         gridHint.hidden = cards.length === 0;
+        updateCrewBriefButtonState();
       }
 
       function renderDailyForecastDetails(date) {
@@ -2474,8 +2753,9 @@
         }
       });
 
-      applyLocationButton.addEventListener("click", applySelectedLocation);
+      searchLocationButton.addEventListener("click", searchLocation);
       resetButton.addEventListener("click", resetLocationToProvo);
+      copyCrewBriefButton.addEventListener("click", copyCrewBrief);
       retryForecastButton.addEventListener("click", () => loadForecastForLocation(lastRequestedCoordinates));
       useCachedForecastButton.addEventListener("click", useLastSuccessfulForecast);
       document.getElementById("apply-thresholds").addEventListener("click", handleApplyThresholds);
@@ -2490,23 +2770,18 @@
         });
       });
 
-      latitudeInput.addEventListener("input", () => clearCoordinateError(latitudeInput, latitudeError));
-      longitudeInput.addEventListener("input", () => clearCoordinateError(longitudeInput, longitudeError));
-      [latitudeInput, longitudeInput].forEach(input => {
-        input.addEventListener("input", () => {
-          if (isLoadingForecast) return;
-          clearDisplayedForecast();
-          forecastBanner.lastChild.textContent = "Location changed · apply to refresh";
-          document.getElementById("map-status").className = "map-status is-pending";
-          document.getElementById("map-status").textContent = "Apply to update location";
-          showForecastState(
-            "pending",
-            "Coordinates edited. Choose Apply Location to update the marker and fetch a forecast."
-          );
-        });
-        input.addEventListener("keydown", event => {
-          if (event.key === "Enter" && !isLoadingForecast) applySelectedLocation();
-        });
+      locationSearchInput.addEventListener("input", () => {
+        if (isLoadingForecast || isSearchingLocation) return;
+        pendingMapCoordinates = null;
+        locationSearchInput.removeAttribute("aria-invalid");
+        clearLocationSearchResults();
+        setLocationSearchStatus("", "");
+      });
+      locationSearchInput.addEventListener("keydown", event => {
+        if (event.key === "Enter" && !isLoadingForecast && !isSearchingLocation) {
+          event.preventDefault();
+          searchLocation();
+        }
       });
 
       document.querySelectorAll(".thresholds summary").forEach(summary => {
@@ -2536,19 +2811,24 @@
 
       function initializeLeafletMap() {
         if (!window.L || map) return;
-        map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).setView(provo, 11);
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          maxZoom: 19,
-          attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        const initialCoordinates = lastRequestedCoordinates;
+        const initialPoint = [initialCoordinates.latitude, initialCoordinates.longitude];
+        map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).setView(initialPoint, 11);
+        L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}", {
+          attribution: 'Tiles &copy; Esri',
+          maxZoom: 19
         }).addTo(map);
-        marker = L.marker(provo, { draggable: true }).addTo(map).bindPopup("Provo, UT jobsite").openPopup();
+        marker = L.marker(initialPoint, { draggable: true })
+          .addTo(map)
+          .bindPopup(`${formatLocationLabel(initialCoordinates)} jobsite`)
+          .openPopup();
         map.on("click", event => setCoordinatesFromMap(event.latlng.lat, event.latlng.lng));
         marker.on("dragend", () => {
           const point = marker.getLatLng();
           setCoordinatesFromMap(point.lat, point.lng);
         });
         document.getElementById("map-fallback").style.display = "none";
-        if (isLoadingForecast) {
+        if (isLoadingForecast || isSearchingLocation) {
           map.dragging.disable();
           marker.dragging.disable();
         }
@@ -2561,7 +2841,7 @@
         document.getElementById("map-status").textContent = "Map unavailable";
         document.querySelector("#map-fallback strong").textContent = "Interactive map unavailable";
         document.querySelector("#map-fallback p").lastChild.textContent =
-          " Enter coordinates manually; forecast controls remain available.";
+          " Search for a location or use the forecast controls.";
       }
 
       window.onLeafletReady = initializeLeafletMap;
