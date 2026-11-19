@@ -1,5 +1,8 @@
 # Jobsite Weather Planner
 
+## App overview
+This single-page weather planner helps construction teams assess the next seven local forecast days for crane lifts, concrete pours, and roofing at one jobsite. A Leaflet map and coordinate controls select the site; Open-Meteo hourly data is summarized into per-activity Go/Caution/No-Go ratings with exact threshold reasons and raw values for verification. The page starts at Provo, UT and is designed for desktop and mobile use.
+
 ## Purpose
 A single-page, field-ready web app for general contractors and project managers to evaluate 7-day weather forecasts for crane lifts, concrete pours, and roofing work. The app combines an interactive jobsite map with one Go/Caution/No-Go daily rating for each activity.
 
@@ -97,3 +100,24 @@ Compare parsed values exactly; equality follows the operator shown, with no uncl
 - Radar, satellite, severe-weather, tornado, hurricane, lightning, or live emergency-alert tracking.
 - Real-time sensors, anemometers, worker tracking, dispatch, scheduling, cost estimation, or automated safety decisions.
 - Concrete cure-state modeling, roofing surface-moisture sensing, crew safety compliance certification, or permit generation.
+
+## Build stages
+### Stage 1 — Mockup of the page layout
+- **Build:** Create the static responsive shell: map area, coordinate controls, `Reset to Provo` button, collapsed `Threshold Settings`, and seven-card forecast layout.
+- **Check:** Review at 1440 px, 1024 px, and 390 px widths. Confirm the map and forecast stack on mobile and threshold controls stay hidden until opened.
+
+### Stage 2 — Location controls and map behavior
+- **Build:** Add Leaflet, the Provo marker and popup, map click/drag coordination, coordinate validation, `Apply Location`, and `Reset to Provo`.
+- **Check:** Confirm valid coordinates update the marker and load a forecast; invalid coordinates show field-specific errors without requesting data; Reset returns to Provo and fetches its forecast.
+
+### Stage 3 — Forecast fetching and calculations
+- **Build:** Request the specified seven-day Open-Meteo hourly fields and US customary units; implement local-day summaries, missing-data behavior, exact activity rating boundaries, API timeout/retry, and last-successful-response fallback. Log the fetched forecast data and computed daily summaries/ratings to the browser console for verification.
+- **Check:** Verify the Provo hand-calculation ratings (Crane Go, Concrete No-Go, Roofing Go), values below/at/above every threshold, correct local-date grouping, incomplete-data handling, and visible console values matching the response and calculations.
+
+### Stage 4 — Forecast cards and day details
+- **Build:** Render the seven-day activity grid and status badges; add keyboard-accessible day selection, desktop detail drawer/mobile bottom sheet, exact rating reasons, and the raw hourly forecast table with copy control.
+- **Check:** Confirm all three activity badges and reasons match the daily summaries; verify raw hourly values retain source precision and the detail panel/table work at desktop, tablet, and mobile widths.
+
+### Stage 5 — Validation and polish
+- **Build:** Complete the National Weather Service comparison, browser and responsive checks, API-failure checks, and keyboard/focus review; record comparison results in `02_validation/`.
+- **Check:** Validate the stated NWS tolerances and investigate mismatches; retest the Provo fixture, threshold boundary cases, map reset, threshold settings, retry/cache behavior, and the 1440 px, 1024 px, and 390 px layouts.
