@@ -6,10 +6,12 @@
   <meta name="theme-color" content="#1E3A5F">
   <title>Jobsite Weather Planner</title>
   <link
-    rel="stylesheet"
+    rel="preload"
+    as="style"
     href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
+    onload="this.onload=null;this.rel='stylesheet'"
   >
   <style>
     :root {
@@ -115,9 +117,9 @@
       align-items: center;
       gap: 7px;
       padding: 7px 10px;
-      color: #854D0E;
-      background: #FEF3C7;
-      border: 1px solid #FCD34D;
+      color: #1E40AF;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 750;
@@ -128,7 +130,7 @@
       width: 7px;
       height: 7px;
       border-radius: 50%;
-      background: #D97706;
+      background: #2563EB;
     }
 
     main {
@@ -198,6 +200,22 @@
       background: #22C55E;
     }
 
+    .map-status.is-pending {
+      color: #92400E;
+    }
+
+    .map-status.is-pending::before {
+      background: #D97706;
+    }
+
+    .map-status.is-error {
+      color: #991B1B;
+    }
+
+    .map-status.is-error::before {
+      background: #DC2626;
+    }
+
     #map {
       height: 420px;
       min-height: 420px;
@@ -230,7 +248,7 @@
 
     .coordinates {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 12px;
     }
 
@@ -246,6 +264,7 @@
     .field input,
     .threshold-field input {
       width: 100%;
+      min-width: 0;
       min-height: 42px;
       padding: 9px 10px;
       color: #374151;
@@ -253,6 +272,18 @@
       border: 1px solid #CBD5E1;
       border-radius: 4px;
       font-size: 16px;
+    }
+
+    .field input[aria-invalid="true"] {
+      border-color: #DC2626;
+    }
+
+    .field-error {
+      margin-top: 5px;
+      display: block;
+      color: #B91C1C;
+      font-size: 11px;
+      line-height: 1.4;
     }
 
     .control-actions {
@@ -319,6 +350,56 @@
       color: var(--muted);
       font-size: 11px;
       line-height: 1.5;
+    }
+
+    .forecast-state {
+      margin: 0 0 14px;
+      padding: 11px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      color: #1E40AF;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .forecast-state[data-state="error"] {
+      min-height: 120px;
+      justify-content: center;
+      color: #991B1B;
+      background: #FEF2F2;
+      border-color: #FECACA;
+      text-align: center;
+    }
+
+    .forecast-state[data-state="success"] {
+      color: #166534;
+      background: #F0FDF4;
+      border-color: #BBF7D0;
+    }
+
+    .forecast-state[data-state="loading"] {
+      color: #92400E;
+      background: #FFFBEB;
+      border-color: #FDE68A;
+    }
+
+    .forecast-state[data-state="cached"] {
+      color: #92400E;
+      background: #FFFBEB;
+      border-color: #FDE68A;
+    }
+
+    .forecast-state-actions {
+      display: flex;
+      flex: 0 0 auto;
+      flex-wrap: wrap;
+      justify-content: end;
+      gap: 6px;
     }
 
     .thresholds {
@@ -396,7 +477,7 @@
 
     .threshold-fields {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 10px;
     }
 
@@ -467,6 +548,90 @@
       gap: 10px;
     }
 
+    .pour-window-banner {
+      margin: 0 0 14px;
+      padding: 16px;
+      background: #EFF6FF;
+      border: 1px solid #BFDBFE;
+      border-radius: 12px;
+    }
+
+    .pour-window-header {
+      margin-bottom: 12px;
+    }
+
+    .pour-window-eyebrow {
+      margin: 0 0 4px;
+      color: #1D4ED8;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .pour-window-title {
+      margin: 0;
+      color: var(--navy);
+      font-size: 17px;
+      font-weight: 780;
+    }
+
+    .pour-window-summary,
+    .pour-window-reason,
+    .pour-window-data-note {
+      margin: 8px 0 0;
+      color: #334155;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .pour-window-days {
+      margin: 12px 0;
+      padding: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      list-style: none;
+    }
+
+    .pour-window-day {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #1F2937;
+      font-size: 12px;
+    }
+
+    .pour-window-day .badge {
+      min-height: 20px;
+      padding: 3px 5px;
+      font-size: 10px;
+    }
+
+    .pour-window-metrics {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      color: #334155;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .pour-window-reasons {
+      margin: 10px 0 0;
+      padding-left: 20px;
+      color: #7F1D1D;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .pour-window-data-note {
+      padding-top: 9px;
+      border-top: 1px solid #BFDBFE;
+      color: #475569;
+      font-size: 11px;
+    }
+
     .day-card {
       min-width: 0;
       padding: 12px 10px 11px;
@@ -477,6 +642,11 @@
       border-radius: 12px;
       box-shadow: 0 1px 2px rgb(17 24 39 / 4%);
       transition: transform 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+    }
+
+    .day-card.is-pour-window {
+      border: 2px solid var(--navy);
+      box-shadow: 0 0 0 2px #DBEAFE;
     }
 
     .day-card:hover,
@@ -496,6 +666,21 @@
       white-space: nowrap;
     }
 
+    .pour-window-card-label {
+      width: fit-content;
+      margin: -4px 0 9px;
+      padding: 3px 5px;
+      display: block;
+      color: #1E3A5F;
+      background: #DBEAFE;
+      border-radius: 4px;
+      font-size: 9px;
+      font-weight: 800;
+      letter-spacing: 0.025em;
+      line-height: 1.2;
+      text-transform: uppercase;
+    }
+
     .day-date {
       display: block;
       margin: 4px 0 12px;
@@ -513,14 +698,6 @@
       color: #334155;
       font-size: 12px;
       font-weight: 650;
-    }
-
-    .condition-icon {
-      width: 18px;
-      flex: 0 0 18px;
-      color: #64748B;
-      text-align: center;
-      font-size: 15px;
     }
 
     .activity-status {
@@ -550,7 +727,7 @@
       justify-content: center;
       border: 1px solid;
       border-radius: 4px;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 800;
       letter-spacing: 0.02em;
       line-height: 1;
@@ -775,17 +952,6 @@
       margin: 10px;
     }
 
-    .preview-disclaimer {
-      margin: 16px 0 0;
-      padding: 10px 11px;
-      color: #854D0E;
-      background: #FFFBEB;
-      border: 1px solid #FDE68A;
-      border-radius: 6px;
-      font-size: 11px;
-      line-height: 1.5;
-    }
-
     [hidden] {
       display: none !important;
     }
@@ -812,6 +978,7 @@
       .topbar {
         min-height: 68px;
         padding: 12px;
+        flex-wrap: wrap;
       }
 
       .brand-mark {
@@ -872,9 +1039,13 @@
       .day-card {
         padding: 12px;
         display: grid;
-        grid-template-columns: 70px minmax(84px, 1fr) repeat(3, minmax(66px, auto));
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: center;
         gap: 8px;
+      }
+
+      .day-label {
+        grid-column: 1;
       }
 
       .day-date {
@@ -882,9 +1053,10 @@
       }
 
       .day-condition {
+        grid-column: 2 / -1;
         min-height: 0;
         margin: 0;
-        font-size: 11px;
+        font-size: 12px;
       }
 
       .activity-status {
@@ -897,9 +1069,9 @@
       }
 
       .activity-name {
-        min-height: 25px;
-        margin-bottom: 4px;
-        font-size: 9px;
+        min-height: 0;
+        margin-bottom: 5px;
+        font-size: 10px;
       }
 
       .detail-scrim {
@@ -963,8 +1135,8 @@
       }
 
       .day-card {
-        grid-template-columns: 58px minmax(68px, 1fr) repeat(3, minmax(54px, auto));
-        gap: 5px;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
         padding: 10px 8px;
       }
 
@@ -977,19 +1149,10 @@
       }
 
       .day-condition {
-        font-size: 10px;
-      }
-
-      .condition-icon {
-        display: none;
+        font-size: 11px;
       }
 
       .activity-name {
-        font-size: 8px;
-      }
-
-      .badge {
-        padding: 4px 5px;
         font-size: 9px;
       }
     }
@@ -1019,7 +1182,7 @@
         <p>Weather-aware planning for the work ahead</p>
       </div>
     </div>
-    <span class="preview-flag"><span class="preview-dot" aria-hidden="true"></span>Preview data · not live</span>
+    <span class="preview-flag" id="forecast-banner"><span class="preview-dot" aria-hidden="true"></span>Loading live forecast…</span>
   </header>
 
   <main>
@@ -1029,36 +1192,38 @@
           <div class="panel-heading">
             <div>
               <h2 id="map-title">Jobsite Location</h2>
-              <p>Map preview · Provo, Utah</p>
+              <p id="map-location-label">Provo, Utah</p>
             </div>
-            <span class="map-status" id="map-status" role="status">Provo jobsite</span>
+            <span class="map-status is-pending" id="map-status" role="status">Loading forecast…</span>
           </div>
           <div id="map" role="region" aria-label="Map preview centered on the Provo, Utah jobsite">
             <div class="map-fallback" id="map-fallback">
-              <p><strong>Provo, Utah</strong>Map tiles could not be loaded. The location controls are shown for preview.</p>
+              <p><strong>Loading interactive map…</strong>If the map service is unavailable, you can still enter coordinates and use the forecast controls.</p>
             </div>
           </div>
           <div class="location-controls">
             <div class="coordinates">
               <div class="field">
                 <label for="latitude">Latitude (°N)</label>
-                <input id="latitude" type="number" value="40.2338" step="0.0001" min="-90" max="90" readonly aria-label="Latitude preview value">
+                <input id="latitude" type="number" value="40.2338" step="0.0001" min="-90" max="90" inputmode="decimal" aria-describedby="latitude-error">
+                <small class="field-error" id="latitude-error" hidden></small>
               </div>
               <div class="field">
                 <label for="longitude">Longitude (°W)</label>
-                <input id="longitude" type="number" value="111.6585" step="0.0001" min="0" max="180" readonly aria-label="Longitude preview value">
+                <input id="longitude" type="number" value="111.6585" step="0.0001" min="0" max="180" inputmode="decimal" aria-describedby="longitude-error">
+                <small class="field-error" id="longitude-error" hidden></small>
               </div>
             </div>
             <div class="control-actions">
-              <button class="button button-primary" type="button" disabled title="Location editing is part of a later build stage">Apply Location</button>
-              <button class="button button-secondary button-small" type="button" id="reset-provo">
+              <button class="button button-primary" type="button" id="apply-location">Apply Location</button>
+              <button class="button button-secondary button-small" type="button" id="reset-provo" disabled>
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                   <path d="M3 12a9 9 0 1 0 2.64-6.36L3 8"></path><path d="M3 3v5h5"></path>
                 </svg>
                 Reset to Provo
               </button>
             </div>
-            <p class="location-note">Coordinates and forecast are static in this layout preview. Reset returns the map to its initial Provo view.</p>
+            <p class="location-note">Enter coordinates or select a point on the map, then apply to request its forecast. Ratings update when you change the location or thresholds.</p>
           </div>
         </section>
 
@@ -1079,38 +1244,37 @@
               </svg>
             </summary>
             <div class="threshold-content">
-              <p class="threshold-intro">Defaults shown for the layout preview. Threshold controls are not applied in this mockup.</p>
+              <p class="threshold-intro">Defaults are editable for this session. Applying changes updates the forecast badges and day details.</p>
               <div class="threshold-group">
                 <h3>Crane lifts</h3>
                 <div class="threshold-fields">
-                  <div class="threshold-field"><label for="crane-wind-go">Sustained Go (mph)</label><input id="crane-wind-go" value="20" disabled></div>
-                  <div class="threshold-field"><label for="crane-wind-stop">Sustained No-Go (mph)</label><input id="crane-wind-stop" value="25" disabled></div>
-                  <div class="threshold-field"><label for="crane-gust-go">Gust Go (mph)</label><input id="crane-gust-go" value="25" disabled></div>
-                  <div class="threshold-field"><label for="crane-gust-stop">Gust No-Go (mph)</label><input id="crane-gust-stop" value="30" disabled></div>
+                  <div class="threshold-field"><label for="crane-wind-go">Sustained Go (mph)</label><input id="crane-wind-go" type="number" min="0" max="100" step="1" value="20" aria-describedby="crane-wind-go-error"><small class="field-error threshold-error" id="crane-wind-go-error" hidden></small></div>
+                  <div class="threshold-field"><label for="crane-wind-stop">Sustained No-Go (mph)</label><input id="crane-wind-stop" type="number" min="0" max="100" step="1" value="25" aria-describedby="crane-wind-stop-error"><small class="field-error threshold-error" id="crane-wind-stop-error" hidden></small></div>
+                  <div class="threshold-field"><label for="crane-gust-go">Gust Go (mph)</label><input id="crane-gust-go" type="number" min="0" max="150" step="1" value="25" aria-describedby="crane-gust-go-error"><small class="field-error threshold-error" id="crane-gust-go-error" hidden></small></div>
+                  <div class="threshold-field"><label for="crane-gust-stop">Gust No-Go (mph)</label><input id="crane-gust-stop" type="number" min="0" max="150" step="1" value="30" aria-describedby="crane-gust-stop-error"><small class="field-error threshold-error" id="crane-gust-stop-error" hidden></small></div>
                 </div>
               </div>
               <div class="threshold-group">
                 <h3>Concrete pours</h3>
                 <div class="threshold-fields">
-                  <div class="threshold-field"><label for="concrete-temp-go">Go minimum (°F)</label><input id="concrete-temp-go" value="40" disabled></div>
-                  <div class="threshold-field"><label for="concrete-temp-caution">Caution minimum (°F)</label><input id="concrete-temp-caution" value="35" disabled></div>
-                  <div class="threshold-field"><label for="concrete-rain-stop">No-Go rain (%)</label><input id="concrete-rain-stop" value="60" disabled></div>
+                  <div class="threshold-field"><label for="concrete-temp-go">Go minimum (°F)</label><input id="concrete-temp-go" type="number" min="-40" max="120" step="1" value="40" aria-describedby="concrete-temp-go-error"><small class="field-error threshold-error" id="concrete-temp-go-error" hidden></small></div>
+                  <div class="threshold-field"><label for="concrete-temp-caution">Caution minimum (°F)</label><input id="concrete-temp-caution" type="number" min="-40" max="120" step="1" value="35" aria-describedby="concrete-temp-caution-error"><small class="field-error threshold-error" id="concrete-temp-caution-error" hidden></small></div>
+                  <div class="threshold-field"><label for="concrete-rain-stop">No-Go rain (%)</label><input id="concrete-rain-stop" type="number" min="0" max="100" step="1" value="60" aria-describedby="concrete-rain-stop-error"><small class="field-error threshold-error" id="concrete-rain-stop-error" hidden></small></div>
                 </div>
               </div>
               <div class="threshold-group">
                 <h3>Roofing</h3>
                 <div class="threshold-fields">
-                  <div class="threshold-field"><label for="roof-rain-go">Rain Go limit (%)</label><input id="roof-rain-go" value="20" disabled></div>
-                  <div class="threshold-field"><label for="roof-rain-stop">Rain No-Go limit (%)</label><input id="roof-rain-stop" value="40" disabled></div>
-                  <div class="threshold-field"><label for="roof-gust-go">Gust Go limit (mph)</label><input id="roof-gust-go" value="25" disabled></div>
-                  <div class="threshold-field"><label for="roof-gust-stop">Gust No-Go limit (mph)</label><input id="roof-gust-stop" value="30" disabled></div>
+                  <div class="threshold-field"><label for="roof-rain-go">Rain Go limit (%)</label><input id="roof-rain-go" type="number" min="0" max="100" step="1" value="20" aria-describedby="roof-rain-go-error"><small class="field-error threshold-error" id="roof-rain-go-error" hidden></small></div>
+                  <div class="threshold-field"><label for="roof-rain-stop">Rain No-Go limit (%)</label><input id="roof-rain-stop" type="number" min="0" max="100" step="1" value="40" aria-describedby="roof-rain-stop-error"><small class="field-error threshold-error" id="roof-rain-stop-error" hidden></small></div>
+                  <div class="threshold-field"><label for="roof-gust-go">Gust Go limit (mph)</label><input id="roof-gust-go" type="number" min="0" max="150" step="1" value="25" aria-describedby="roof-gust-go-error"><small class="field-error threshold-error" id="roof-gust-go-error" hidden></small></div>
+                  <div class="threshold-field"><label for="roof-gust-stop">Gust No-Go (mph)</label><input id="roof-gust-stop" type="number" min="0" max="150" step="1" value="30" aria-describedby="roof-gust-stop-error"><small class="field-error threshold-error" id="roof-gust-stop-error" hidden></small></div>
                 </div>
               </div>
               <div class="threshold-actions">
-                <button class="button button-primary button-small" type="button" disabled>Apply Thresholds</button>
-                <button class="button button-secondary button-small" type="button" disabled>Reset to Defaults</button>
+                <button class="button button-primary button-small" type="button" id="apply-thresholds">Apply Thresholds</button>
+                <button class="button button-secondary button-small" type="button" id="reset-thresholds">Reset to Defaults</button>
               </div>
-              <small class="static-note">Threshold changes become available in a later build stage.</small>
             </div>
           </details>
         </section>
@@ -1126,72 +1290,43 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"></path><circle cx="12" cy="10" r="2.5"></circle>
             </svg>
-            Provo, UT
+            <span id="forecast-location">Provo, UT</span>
           </span>
         </div>
 
-        <div class="forecast-grid" id="forecast-grid" aria-label="Seven-day sample forecast">
-          <button class="day-card" type="button" data-day="0" aria-label="View details for Wednesday, November 18" aria-pressed="true">
-            <span><span class="day-name">Today</span><span class="day-date">Nov 18</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Partly cloudy</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-go">GO</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-no-go">NO-GO</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="1" aria-label="View details for Thursday, November 19" aria-pressed="false">
-            <span><span class="day-name">Thu</span><span class="day-date">Nov 19</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Clouds</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-caution">CAUTION</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-caution">CAUTION</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-caution">CAUTION</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="2" aria-label="View details for Friday, November 20" aria-pressed="false">
-            <span><span class="day-name">Fri</span><span class="day-date">Nov 20</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☂</span>Showers</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-no-go">NO-GO</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="3" aria-label="View details for Saturday, November 21" aria-pressed="false">
-            <span><span class="day-name">Sat</span><span class="day-date">Nov 21</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Clear</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-go">GO</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="4" aria-label="View details for Sunday, November 22" aria-pressed="false">
-            <span><span class="day-name">Sun</span><span class="day-date">Nov 22</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Windy</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-caution">CAUTION</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-no-go">NO-GO</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-caution">CAUTION</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="5" aria-label="View details for Monday, November 23" aria-pressed="false">
-            <span><span class="day-name">Mon</span><span class="day-date">Nov 23</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☀</span>Mostly sunny</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-caution">CAUTION</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-no-go">NO-GO</span></span>
-          </button>
-          <button class="day-card" type="button" data-day="6" aria-label="View details for Tuesday, November 24" aria-pressed="false">
-            <span><span class="day-name">Tue</span><span class="day-date">Nov 24</span></span>
-            <span class="day-condition"><span class="condition-icon" aria-hidden="true">☁</span>Breezy</span>
-            <span class="activity-status"><span class="activity-name">Crane Lifts</span><span class="badge badge-no-go">NO-GO</span></span>
-            <span class="activity-status"><span class="activity-name">Concrete Pours</span><span class="badge badge-go">GO</span></span>
-            <span class="activity-status"><span class="activity-name">Roofing</span><span class="badge badge-go">GO</span></span>
-          </button>
+        <div class="forecast-state" id="forecast-state" data-state="loading" role="status" aria-live="polite">
+          <span id="forecast-state-message">Requesting the initial Provo forecast…</span>
+          <span class="forecast-state-actions">
+            <button class="button button-secondary button-small" id="retry-forecast" type="button" hidden>Retry</button>
+            <button class="button button-secondary button-small" id="use-cached-forecast" type="button" hidden>Use last loaded forecast</button>
+          </span>
         </div>
-        <p class="grid-hint">Select a day to view its sample conditions and rating details.</p>
+
+        <section class="pour-window-banner" id="pour-window-banner" aria-labelledby="pour-window-title" aria-live="polite" hidden>
+          <div class="pour-window-header">
+            <p class="pour-window-eyebrow" id="pour-window-eyebrow">Best 3-Day Pour Window</p>
+            <h3 class="pour-window-title" id="pour-window-title"></h3>
+            <p class="pour-window-summary" id="pour-window-summary"></p>
+          </div>
+          <ul class="pour-window-days" id="pour-window-days"></ul>
+          <div class="pour-window-metrics" id="pour-window-metrics"></div>
+          <p class="pour-window-reason" id="pour-window-reason"></p>
+          <ul class="pour-window-reasons" id="pour-window-no-go-reasons" hidden></ul>
+          <p class="pour-window-data-note" id="pour-window-data-note" hidden></p>
+        </section>
+
+        <div class="forecast-grid" id="forecast-grid" aria-label="Seven-day activity forecast" hidden></div>
+        <p class="grid-hint" id="grid-hint" hidden>Select a day to view its conditions, rating reasons, and raw hourly forecast.</p>
       </section>
     </div>
   </main>
 
-  <div class="detail-scrim" id="detail-scrim"></div>
-  <aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title">
+  <div class="detail-scrim" id="detail-scrim" hidden></div>
+  <aside class="detail-drawer" id="detail-drawer" role="dialog" aria-modal="true" aria-labelledby="detail-title" hidden>
     <div class="drawer-header">
       <div>
-        <p class="drawer-eyebrow">Daily activity details · Preview</p>
-        <h2 id="detail-title">Wednesday, November 18</h2>
+        <p class="drawer-eyebrow">Daily activity details</p>
+        <h2 id="detail-title"></h2>
       </div>
       <button class="icon-button" id="close-details" type="button" aria-label="Close details">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -1200,14 +1335,14 @@
       </button>
     </div>
     <div class="drawer-content" id="drawer-content">
-      <p class="drawer-intro">Sample daily weather values for the Provo jobsite. Ratings below are fixed preview content, not live calculations.</p>
-      <div class="detail-metrics" aria-label="Sample daily weather summary">
-        <div class="metric"><span class="metric-label">Low temperature</span><span class="metric-value" data-metric="low">32°F</span></div>
-        <div class="metric"><span class="metric-label">High temperature</span><span class="metric-value" data-metric="high">48°F</span></div>
-        <div class="metric"><span class="metric-label">Max sustained wind</span><span class="metric-value" data-metric="wind">15 mph</span></div>
-        <div class="metric"><span class="metric-label">Max gust</span><span class="metric-value" data-metric="gust">22 mph</span></div>
-        <div class="metric"><span class="metric-label">Max rain probability</span><span class="metric-value" data-metric="rain">10%</span></div>
-        <div class="metric"><span class="metric-label">Local forecast hours</span><span class="metric-value" data-metric="hours">24</span></div>
+      <p class="drawer-intro" id="drawer-intro"></p>
+      <div class="detail-metrics" aria-label="Daily weather summary">
+        <div class="metric"><span class="metric-label">Low temperature</span><span class="metric-value" data-metric="low">—</span></div>
+        <div class="metric"><span class="metric-label">High temperature</span><span class="metric-value" data-metric="high">—</span></div>
+        <div class="metric"><span class="metric-label">Max sustained wind</span><span class="metric-value" data-metric="wind">—</span></div>
+        <div class="metric"><span class="metric-label">Max gust</span><span class="metric-value" data-metric="gust">—</span></div>
+        <div class="metric"><span class="metric-label">Max rain probability</span><span class="metric-value" data-metric="rain">—</span></div>
+        <div class="metric"><span class="metric-label">Local forecast hours</span><span class="metric-value" data-metric="hours">—</span></div>
       </div>
 
       <section class="detail-activity" aria-labelledby="detail-crane">
@@ -1224,124 +1359,838 @@
       </section>
 
       <details class="hourly-details">
-        <summary>Raw Hourly Forecast <span style="color:#6B7280;font-weight:500;">(sample values)</span></summary>
+        <summary>Raw Hourly Forecast</summary>
         <div class="hourly-table-wrap">
           <table class="hourly-table" id="hourly-table">
             <thead>
               <tr><th>Local time</th><th>temperature_2m (°F)</th><th>wind_speed_10m (mph)</th><th>wind_gusts_10m (mph)</th><th>precipitation_probability (%)</th></tr>
             </thead>
-            <tbody>
-              <tr><td>12:00 AM</td><td>35</td><td>4</td><td>7</td><td>0</td></tr>
-              <tr><td>6:00 AM</td><td>32</td><td>6</td><td>10</td><td>0</td></tr>
-              <tr><td>12:00 PM</td><td>48</td><td>12</td><td>18</td><td>10</td></tr>
-              <tr><td>6:00 PM</td><td>41</td><td>15</td><td>22</td><td>5</td></tr>
-            </tbody>
+            <tbody></tbody>
           </table>
         </div>
         <button class="button button-secondary button-small copy-button" id="copy-table" type="button">Copy table</button>
       </details>
-      <p class="preview-disclaimer">Layout preview only. All weather values and ratings are illustrative placeholders; no forecast API or safety calculations are connected.</p>
     </div>
   </aside>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
   <script>
     (() => {
       "use strict";
 
       const provo = [40.2338, -111.6585];
-      const daySamples = [
-        {
-          title: "Wednesday, November 18",
-          low: "32°F", high: "48°F", wind: "15 mph", gust: "22 mph", rain: "10%", hours: "24",
-          ratings: ["GO", "NO-GO", "GO"],
-          reasons: [
-            "Sustained wind: 15 mph; gust: 22 mph. GO — both values are below the Go limits of 20 mph sustained and 25 mph gust.",
-            "Minimum temperature: 32°F; maximum rain probability: 10%. NO-GO — minimum temperature is below the 35°F lower limit.",
-            "Maximum rain probability: 10%; maximum gust: 22 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
-          ],
-          rows: [["12:00 AM", "35", "4", "7", "0"], ["6:00 AM", "32", "6", "10", "0"], ["12:00 PM", "48", "12", "18", "10"], ["6:00 PM", "41", "15", "22", "5"]]
-        },
-        {
-          title: "Thursday, November 19",
-          low: "37°F", high: "51°F", wind: "22 mph", gust: "28 mph", rain: "30%", hours: "24",
-          ratings: ["CAUTION", "CAUTION", "CAUTION"],
-          reasons: [
-            "Sustained wind: 22 mph; gust: 28 mph. CAUTION — sustained wind is at or above 20 mph and gust is at or above 25 mph.",
-            "Minimum temperature: 37°F; maximum rain probability: 30%. CAUTION — minimum temperature is below 40°F and at least 35°F.",
-            "Maximum rain probability: 30%; maximum gust: 28 mph. CAUTION — rain is at or above 20% and gust is at or above 25 mph."
-          ],
-          rows: [["12:00 AM", "40", "9", "13", "10"], ["6:00 AM", "37", "11", "16", "10"], ["12:00 PM", "51", "18", "25", "20"], ["6:00 PM", "45", "22", "28", "30"]]
-        },
-        {
-          title: "Friday, November 20",
-          low: "43°F", high: "56°F", wind: "27 mph", gust: "34 mph", rain: "45%", hours: "24",
-          ratings: ["NO-GO", "GO", "NO-GO"],
-          reasons: [
-            "Sustained wind: 27 mph; gust: 34 mph. NO-GO — sustained wind is at or above 25 mph and gust is at or above 30 mph.",
-            "Minimum temperature: 43°F; maximum rain probability: 45%. GO — minimum temperature is at least 40°F and rain is below 60%.",
-            "Maximum rain probability: 45%; maximum gust: 34 mph. NO-GO — rain probability is at or above 40% and gust is at or above 30 mph."
-          ],
-          rows: [["12:00 AM", "46", "12", "17", "10"], ["6:00 AM", "43", "15", "20", "20"], ["12:00 PM", "56", "23", "31", "35"], ["6:00 PM", "49", "27", "34", "45"]]
-        },
-        {
-          title: "Saturday, November 21",
-          low: "44°F", high: "62°F", wind: "18 mph", gust: "24 mph", rain: "8%", hours: "24",
-          ratings: ["GO", "GO", "GO"],
-          reasons: [
-            "Sustained wind: 18 mph; gust: 24 mph. GO — both values are below the Go limits of 20 mph sustained and 25 mph gust.",
-            "Minimum temperature: 44°F; maximum rain probability: 8%. GO — minimum temperature is at least 40°F and rain is below 60%.",
-            "Maximum rain probability: 8%; maximum gust: 24 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
-          ],
-          rows: [["12:00 AM", "48", "8", "12", "0"], ["6:00 AM", "44", "9", "14", "0"], ["12:00 PM", "62", "16", "21", "5"], ["6:00 PM", "54", "18", "24", "8"]]
-        },
-        {
-          title: "Sunday, November 22",
-          low: "33°F", high: "48°F", wind: "21 mph", gust: "27 mph", rain: "35%", hours: "24",
-          ratings: ["CAUTION", "NO-GO", "CAUTION"],
-          reasons: [
-            "Sustained wind: 21 mph; gust: 27 mph. CAUTION — sustained wind is at or above 20 mph and gust is at or above 25 mph.",
-            "Minimum temperature: 33°F; maximum rain probability: 35%. NO-GO — minimum temperature is below the 35°F lower limit.",
-            "Maximum rain probability: 35%; maximum gust: 27 mph. CAUTION — rain is at or above the 20% Go limit but below 40%; gust is at or above 25 mph but below 30 mph."
-          ],
-          rows: [["12:00 AM", "37", "12", "18", "25"], ["6:00 AM", "33", "15", "22", "30"], ["12:00 PM", "48", "20", "25", "35"], ["6:00 PM", "40", "21", "27", "30"]]
-        },
-        {
-          title: "Monday, November 23",
-          low: "38°F", high: "53°F", wind: "16 mph", gust: "31 mph", rain: "25%", hours: "24",
-          ratings: ["NO-GO", "CAUTION", "NO-GO"],
-          reasons: [
-            "Sustained wind: 16 mph; gust: 31 mph. NO-GO — gust is at or above the 30 mph No-Go limit.",
-            "Minimum temperature: 38°F; maximum rain probability: 25%. CAUTION — minimum temperature is below 40°F and at least 35°F.",
-            "Maximum rain probability: 25%; maximum gust: 31 mph. NO-GO — gust is at or above 30 mph."
-          ],
-          rows: [["12:00 AM", "41", "6", "10", "0"], ["6:00 AM", "38", "8", "12", "5"], ["12:00 PM", "53", "16", "23", "10"], ["6:00 PM", "45", "14", "31", "25"]]
-        },
-        {
-          title: "Tuesday, November 24",
-          low: "42°F", high: "58°F", wind: "26 mph", gust: "23 mph", rain: "12%", hours: "24",
-          ratings: ["NO-GO", "GO", "GO"],
-          reasons: [
-            "Sustained wind: 26 mph; gust: 33 mph. NO-GO — sustained wind is at or above 25 mph and gust is at or above 30 mph.",
-            "Minimum temperature: 42°F; maximum rain probability: 12%. GO — minimum temperature is at least 40°F and rain is below 60%.",
-            "Maximum rain probability: 12%; maximum gust: 22 mph. GO — both values are below the Go limits of 20% rain and 25 mph gust."
-          ],
-          rows: [["12:00 AM", "45", "11", "16", "5"], ["6:00 AM", "42", "12", "18", "5"], ["12:00 PM", "58", "21", "23", "8"], ["6:00 PM", "50", "26", "23", "12"]]
-        }
-      ];
-
       const drawer = document.getElementById("detail-drawer");
       const scrim = document.getElementById("detail-scrim");
       const grid = document.getElementById("forecast-grid");
+      const gridHint = document.querySelector(".grid-hint");
+      const pourWindowBanner = document.getElementById("pour-window-banner");
+      const forecastBanner = document.getElementById("forecast-banner");
       const closeButton = document.getElementById("close-details");
       const resetButton = document.getElementById("reset-provo");
+      const applyLocationButton = document.getElementById("apply-location");
+      const retryForecastButton = document.getElementById("retry-forecast");
+      const useCachedForecastButton = document.getElementById("use-cached-forecast");
+      const latitudeInput = document.getElementById("latitude");
+      const longitudeInput = document.getElementById("longitude");
+      const latitudeError = document.getElementById("latitude-error");
+      const longitudeError = document.getElementById("longitude-error");
+      const forecastState = document.getElementById("forecast-state");
+      const forecastStateMessage = document.getElementById("forecast-state-message");
+      const hourlyDetails = document.querySelector(".hourly-details");
+      const hourlyTableBody = document.querySelector("#hourly-table tbody");
+      const forecastEndpoint = "https://api.open-meteo.com/v1/forecast";
+      const hourlyParameters = [
+        "temperature_2m",
+        "wind_speed_10m",
+        "wind_gusts_10m",
+        "precipitation_probability"
+      ];
+      const defaultThresholds = Object.freeze({
+        craneSustainedGo: 20,
+        craneSustainedNoGo: 25,
+        craneGustGo: 25,
+        craneGustNoGo: 30,
+        concreteGoMinimum: 40,
+        concreteCautionMinimum: 35,
+        concreteRainNoGo: 60,
+        roofingRainGo: 20,
+        roofingRainNoGo: 40,
+        roofingGustGo: 25,
+        roofingGustNoGo: 30
+      });
+      const thresholdInputIds = Object.freeze({
+        craneSustainedGo: "crane-wind-go",
+        craneSustainedNoGo: "crane-wind-stop",
+        craneGustGo: "crane-gust-go",
+        craneGustNoGo: "crane-gust-stop",
+        concreteGoMinimum: "concrete-temp-go",
+        concreteCautionMinimum: "concrete-temp-caution",
+        concreteRainNoGo: "concrete-rain-stop",
+        roofingRainGo: "roof-rain-go",
+        roofingRainNoGo: "roof-rain-stop",
+        roofingGustGo: "roof-gust-go",
+        roofingGustNoGo: "roof-gust-stop"
+      });
+      const thresholdBounds = Object.freeze({
+        craneSustainedGo: [0, 100],
+        craneSustainedNoGo: [0, 100],
+        craneGustGo: [0, 150],
+        craneGustNoGo: [0, 150],
+        concreteGoMinimum: [-40, 120],
+        concreteCautionMinimum: [-40, 120],
+        concreteRainNoGo: [0, 100],
+        roofingRainGo: [0, 100],
+        roofingRainNoGo: [0, 100],
+        roofingGustGo: [0, 150],
+        roofingGustNoGo: [0, 150]
+      });
       let map = null;
       let marker = null;
       let lastFocusedCard = null;
+      let selectedForecastDate = null;
+      let isLoadingForecast = false;
+      let latestHourlyForecast = null;
+      let latestDailyRatings = null;
+      let lastSuccessfulForecast = null;
+      let activeThresholds = { ...defaultThresholds };
+      let lastRequestedCoordinates = { latitude: provo[0], longitudeWest: Math.abs(provo[1]) };
+
+      function validateCoordinateValues(latitudeText, longitudeText) {
+        const decimalPattern = /^-?\d+(?:\.\d{1,4})?$/;
+        const errors = { latitude: "", longitude: "" };
+        const latitudeValue = latitudeText.trim();
+        const longitudeValue = longitudeText.trim();
+
+        if (!latitudeValue) {
+          errors.latitude = "Enter a latitude.";
+        } else if (!decimalPattern.test(latitudeValue)) {
+          errors.latitude = "Enter a number with no more than 4 decimal places.";
+        } else if (Number(latitudeValue) < -90 || Number(latitudeValue) > 90) {
+          errors.latitude = "Latitude must be between -90 and 90.";
+        }
+
+        if (!longitudeValue) {
+          errors.longitude = "Enter a longitude in degrees west.";
+        } else if (!decimalPattern.test(longitudeValue)) {
+          errors.longitude = "Enter a number with no more than 4 decimal places.";
+        } else if (Number(longitudeValue) < 0 || Number(longitudeValue) > 180) {
+          errors.longitude = "Longitude must be between 0 and 180 degrees west.";
+        }
+
+        return {
+          valid: !errors.latitude && !errors.longitude,
+          errors,
+          coordinates: {
+            latitude: Number(latitudeValue),
+            longitudeWest: Number(longitudeValue)
+          }
+        };
+      }
+
+      function buildForecastRequestUrl(coordinates) {
+        const query = new URLSearchParams({
+          latitude: String(coordinates.latitude),
+          longitude: String(-Math.abs(coordinates.longitudeWest)),
+          hourly: hourlyParameters.join(","),
+          temperature_unit: "fahrenheit",
+          wind_speed_unit: "mph",
+          precipitation_unit: "inch",
+          forecast_days: "7",
+          timezone: "auto"
+        });
+        return `${forecastEndpoint}?${query.toString()}`;
+      }
+
+      function validateHourlyForecastResponse(payload) {
+        if (
+          !payload ||
+          !payload.hourly ||
+          !Array.isArray(payload.hourly.time) ||
+          payload.hourly.time.length === 0
+        ) {
+          throw new Error("The forecast service returned no hourly forecast.");
+        }
+
+        const expectedLength = payload.hourly.time.length;
+        const missingFields = hourlyParameters.filter(field =>
+          !Array.isArray(payload.hourly[field]) || payload.hourly[field].length !== expectedLength
+        );
+        if (missingFields.length) {
+          throw new Error(`The hourly forecast is missing valid fields: ${missingFields.join(", ")}.`);
+        }
+        return payload;
+      }
+
+      function calculateDailyWeatherSummaries(forecast) {
+        const daily = new Map();
+        const { time, temperature_2m, wind_speed_10m, wind_gusts_10m, precipitation_probability } = forecast.hourly;
+
+        time.forEach((localTime, index) => {
+          const date = typeof localTime === "string" ? localTime.slice(0, 10) : "";
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+            throw new Error(`The forecast contains an invalid local timestamp at hour ${index}.`);
+          }
+
+          if (!daily.has(date)) {
+            daily.set(date, {
+              date,
+              hourlyCount: 0,
+              temperatures: [],
+              sustainedWinds: [],
+              gusts: [],
+              rainProbabilities: []
+            });
+          }
+          const summary = daily.get(date);
+          summary.hourlyCount += 1;
+          if (typeof temperature_2m[index] === "number" && Number.isFinite(temperature_2m[index])) {
+            summary.temperatures.push(temperature_2m[index]);
+          }
+          if (typeof wind_speed_10m[index] === "number" && Number.isFinite(wind_speed_10m[index])) {
+            summary.sustainedWinds.push(wind_speed_10m[index]);
+          }
+          if (typeof wind_gusts_10m[index] === "number" && Number.isFinite(wind_gusts_10m[index])) {
+            summary.gusts.push(wind_gusts_10m[index]);
+          }
+          if (
+            typeof precipitation_probability[index] === "number" &&
+            Number.isFinite(precipitation_probability[index])
+          ) {
+            summary.rainProbabilities.push(precipitation_probability[index]);
+          }
+        });
+
+        return Array.from(daily.values(), summary => ({
+          date: summary.date,
+          hourlyCount: summary.hourlyCount,
+          minimumTemperature: summary.temperatures.length ? Math.min(...summary.temperatures) : null,
+          maximumTemperature: summary.temperatures.length ? Math.max(...summary.temperatures) : null,
+          maximumSustainedWind: summary.sustainedWinds.length ? Math.max(...summary.sustainedWinds) : null,
+          maximumGust: summary.gusts.length ? Math.max(...summary.gusts) : null,
+          maximumRainProbability: summary.rainProbabilities.length ? Math.max(...summary.rainProbabilities) : null
+        }));
+      }
+
+      function createActivityRating(status, reason) {
+        return { status, reason };
+      }
+
+      function rateCraneConditions(summary, thresholds) {
+        const required = {
+          "maximum sustained wind": summary.maximumSustainedWind,
+          "maximum gust": summary.maximumGust
+        };
+        const missing = Object.entries(required).filter(([, value]) => value === null).map(([name]) => name);
+        if (missing.length) {
+          return createActivityRating("CAUTION", `Data incomplete — Caution; missing ${missing.join(" and ")}.`);
+        }
+
+        const sustained = summary.maximumSustainedWind;
+        const gust = summary.maximumGust;
+        if (sustained >= thresholds.craneSustainedNoGo || gust >= thresholds.craneGustNoGo) {
+          const causes = [];
+          if (sustained >= thresholds.craneSustainedNoGo) {
+            causes.push(`sustained wind is at or above ${thresholds.craneSustainedNoGo} mph`);
+          }
+          if (gust >= thresholds.craneGustNoGo) {
+            causes.push(`gust is at or above ${thresholds.craneGustNoGo} mph`);
+          }
+          return createActivityRating(
+            "NO-GO",
+            `Sustained wind: ${sustained} mph; gust: ${gust} mph. NO-GO — ${causes.join(" and ")}.`
+          );
+        }
+        if (sustained >= thresholds.craneSustainedGo || gust >= thresholds.craneGustGo) {
+          const causes = [];
+          if (sustained >= thresholds.craneSustainedGo) {
+            causes.push(`sustained wind is at or above the ${thresholds.craneSustainedGo} mph Go limit`);
+          }
+          if (gust >= thresholds.craneGustGo) {
+            causes.push(`gust is at or above the ${thresholds.craneGustGo} mph Go limit`);
+          }
+          return createActivityRating(
+            "CAUTION",
+            `Sustained wind: ${sustained} mph; gust: ${gust} mph. CAUTION — ${causes.join(" and ")}.`
+          );
+        }
+        return createActivityRating(
+          "GO",
+          `Sustained wind: ${sustained} mph; gust: ${gust} mph. GO — both values are below their Go limits.`
+        );
+      }
+
+      function rateConcreteConditions(summary, thresholds) {
+        const required = {
+          "minimum temperature": summary.minimumTemperature,
+          "maximum rain probability": summary.maximumRainProbability
+        };
+        const missing = Object.entries(required).filter(([, value]) => value === null).map(([name]) => name);
+        if (missing.length) {
+          return createActivityRating("CAUTION", `Data incomplete — Caution; missing ${missing.join(" and ")}.`);
+        }
+
+        const temperature = summary.minimumTemperature;
+        const rain = summary.maximumRainProbability;
+        const causes = [];
+        if (temperature < thresholds.concreteCautionMinimum) {
+          causes.push(`minimum temperature is below ${thresholds.concreteCautionMinimum}°F`);
+        }
+        if (rain >= thresholds.concreteRainNoGo) {
+          causes.push(`rain probability is at or above ${thresholds.concreteRainNoGo}%`);
+        }
+        if (causes.length) {
+          return createActivityRating(
+            "NO-GO",
+            `Minimum temperature: ${temperature}°F; maximum rain probability: ${rain}%. NO-GO — ${causes.join(" and ")}.`
+          );
+        }
+        if (temperature < thresholds.concreteGoMinimum) {
+          return createActivityRating(
+            "CAUTION",
+            `Minimum temperature: ${temperature}°F; maximum rain probability: ${rain}%. CAUTION — minimum temperature is below ${thresholds.concreteGoMinimum}°F and at or above ${thresholds.concreteCautionMinimum}°F.`
+          );
+        }
+        return createActivityRating(
+          "GO",
+          `Minimum temperature: ${temperature}°F; maximum rain probability: ${rain}%. GO — minimum temperature is at or above ${thresholds.concreteGoMinimum}°F and rain is below ${thresholds.concreteRainNoGo}%.`
+        );
+      }
+
+      function rateRoofingConditions(summary, thresholds) {
+        const required = {
+          "maximum rain probability": summary.maximumRainProbability,
+          "maximum gust": summary.maximumGust
+        };
+        const missing = Object.entries(required).filter(([, value]) => value === null).map(([name]) => name);
+        if (missing.length) {
+          return createActivityRating("CAUTION", `Data incomplete — Caution; missing ${missing.join(" and ")}.`);
+        }
+
+        const rain = summary.maximumRainProbability;
+        const gust = summary.maximumGust;
+        const noGoCauses = [];
+        if (gust >= thresholds.roofingGustNoGo) {
+          noGoCauses.push(`gust is at or above ${thresholds.roofingGustNoGo} mph`);
+        }
+        if (rain >= thresholds.roofingRainNoGo) {
+          noGoCauses.push(`rain probability is at or above ${thresholds.roofingRainNoGo}%`);
+        }
+        if (noGoCauses.length) {
+          return createActivityRating(
+            "NO-GO",
+            `Maximum rain probability: ${rain}%; maximum gust: ${gust} mph. NO-GO — ${noGoCauses.join(" and ")}.`
+          );
+        }
+
+        const cautionCauses = [];
+        if (gust >= thresholds.roofingGustGo) {
+          cautionCauses.push(`gust is at or above the ${thresholds.roofingGustGo} mph Go limit`);
+        }
+        if (rain >= thresholds.roofingRainGo) {
+          cautionCauses.push(`rain probability is at or above the ${thresholds.roofingRainGo}% Go limit`);
+        }
+        if (cautionCauses.length) {
+          return createActivityRating(
+            "CAUTION",
+            `Maximum rain probability: ${rain}%; maximum gust: ${gust} mph. CAUTION — ${cautionCauses.join(" and ")}.`
+          );
+        }
+        return createActivityRating(
+          "GO",
+          `Maximum rain probability: ${rain}%; maximum gust: ${gust} mph. GO — both values are below their Go limits.`
+        );
+      }
+
+      function calculateDailyActivityRatings(forecast, thresholds = defaultThresholds) {
+        return calculateDailyWeatherSummaries(forecast).map(summary => ({
+          ...summary,
+          activities: {
+            crane: rateCraneConditions(summary, thresholds),
+            concrete: rateConcreteConditions(summary, thresholds),
+            roofing: rateRoofingConditions(summary, thresholds)
+          }
+        }));
+      }
+
+      function calculateBestThreeDayPourWindow(days) {
+        const expectedDays = 7;
+        const expectedWindows = 5;
+        const unrankableResult = () => ({
+          window: null,
+          evaluatedWindowCount: 0,
+          incompleteWindowCount: expectedWindows,
+          eligibleWindowCount: 0,
+          statusTieCount: 0,
+          weatherTieBreakUsed: false,
+          noGoFreeWindowExists: false
+        });
+
+        if (!Array.isArray(days) || days.length !== expectedDays) {
+          return unrankableResult();
+        }
+
+        const dayTimes = days.map(day => {
+          if (typeof day.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(day.date)) return NaN;
+          const time = Date.parse(`${day.date}T00:00:00Z`);
+          return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === day.date
+            ? time
+            : NaN;
+        });
+        if (dayTimes.some((time, index) =>
+          !Number.isFinite(time) || (index > 0 && time - dayTimes[index - 1] !== 86400000)
+        )) {
+          return unrankableResult();
+        }
+
+        const windows = [];
+        for (let startIndex = 0; startIndex < expectedWindows; startIndex += 1) {
+          const windowDays = days.slice(startIndex, startIndex + 3);
+          const statuses = windowDays.map(day => day.activities?.concrete?.status);
+          const complete = windowDays.every((day, index) =>
+            Number.isFinite(day.minimumTemperature) &&
+            Number.isFinite(day.maximumRainProbability) &&
+            ["GO", "CAUTION", "NO-GO"].includes(statuses[index])
+          );
+          if (!complete) continue;
+
+          windows.push({
+            startDate: windowDays[0].date,
+            endDate: windowDays[2].date,
+            days: windowDays,
+            goCount: statuses.filter(status => status === "GO").length,
+            cautionCount: statuses.filter(status => status === "CAUTION").length,
+            noGoCount: statuses.filter(status => status === "NO-GO").length,
+            coldestNightMinimum: Math.min(...windowDays.map(day => day.minimumTemperature)),
+            worstDayRainProbability: Math.max(...windowDays.map(day => day.maximumRainProbability))
+          });
+        }
+
+        if (!windows.length) return unrankableResult();
+
+        const noGoFreeWindows = windows.filter(window => window.noGoCount === 0);
+        const eligibleWindows = noGoFreeWindows.length ? noGoFreeWindows : windows;
+        const mostGoDays = Math.max(...eligibleWindows.map(window => window.goCount));
+        const mostStatusQualified = eligibleWindows.filter(window => window.goCount === mostGoDays);
+        const fewestNoGoDays = Math.min(...mostStatusQualified.map(window => window.noGoCount));
+        const statusTiedWindows = mostStatusQualified.filter(window => window.noGoCount === fewestNoGoDays);
+        const percentileRank = (value, candidates, isBetterWhenHigher) => {
+          const strictlyWorse = candidates.filter(candidate =>
+            isBetterWhenHigher ? candidate < value : candidate > value
+          ).length;
+          const equal = candidates.filter(candidate => candidate === value).length;
+          return 100 * (strictlyWorse + 0.5 * equal) / candidates.length;
+        };
+
+        statusTiedWindows.forEach(window => {
+          const temperatures = statusTiedWindows.map(candidate => candidate.coldestNightMinimum);
+          const rainProbabilities = statusTiedWindows.map(candidate => candidate.worstDayRainProbability);
+          window.combinedWeatherPercentile = (
+            percentileRank(window.coldestNightMinimum, temperatures, true) +
+            percentileRank(window.worstDayRainProbability, rainProbabilities, false)
+          ) / 2;
+        });
+        const highestWeatherPercentile = Math.max(...statusTiedWindows.map(window => window.combinedWeatherPercentile));
+        const earliestStartTieBreakUsed = statusTiedWindows.filter(
+          window => window.combinedWeatherPercentile === highestWeatherPercentile
+        ).length > 1;
+        statusTiedWindows.sort((first, second) =>
+          second.combinedWeatherPercentile - first.combinedWeatherPercentile ||
+          first.startDate.localeCompare(second.startDate)
+        );
+
+        return {
+          window: statusTiedWindows[0],
+          evaluatedWindowCount: windows.length,
+          incompleteWindowCount: expectedWindows - windows.length,
+          eligibleWindowCount: eligibleWindows.length,
+          statusTieCount: statusTiedWindows.length,
+          weatherTieBreakUsed: statusTiedWindows.length > 1,
+          earliestStartTieBreakUsed,
+          noGoFreeWindowExists: noGoFreeWindows.length > 0
+        };
+      }
+
+      function logForecastCalculations(forecast, dailyRatings, coordinates) {
+        console.groupCollapsed(
+          `Jobsite Weather Planner forecast · ${formatLocationLabel(coordinates)} · ${dailyRatings.length} days`
+        );
+        console.log("Fetched Open-Meteo hourly forecast", forecast);
+        console.log("Calculated daily summaries and activity ratings", dailyRatings);
+        console.table(dailyRatings.map(day => ({
+          date: day.date,
+          minTempF: day.minimumTemperature,
+          maxSustainedWindMph: day.maximumSustainedWind,
+          maxGustMph: day.maximumGust,
+          maxRainProbability: day.maximumRainProbability,
+          crane: day.activities.crane.status,
+          concrete: day.activities.concrete.status,
+          roofing: day.activities.roofing.status
+        })));
+        console.groupEnd();
+      }
+
+      function validateThresholdInputs() {
+        const values = {};
+        const errors = {};
+
+        Object.entries(thresholdInputIds).forEach(([key, id]) => {
+          const input = document.getElementById(id);
+          const valueText = input.value.trim();
+          const [minimum, maximum] = thresholdBounds[key];
+          let message = "";
+          if (!valueText) {
+            message = "Enter a threshold value.";
+          } else if (!Number.isFinite(Number(valueText))) {
+            message = "Enter a valid number.";
+          } else if (Number(valueText) < minimum || Number(valueText) > maximum) {
+            message = `Enter a value from ${minimum} to ${maximum}.`;
+          } else if (!Number.isInteger(Number(valueText))) {
+            message = "Enter a whole number.";
+          }
+          values[key] = Number(valueText);
+          errors[key] = message;
+        });
+
+        [
+          ["craneSustainedNoGo", "craneSustainedGo", "Sustained No-Go must be greater than Sustained Go."],
+          ["craneGustNoGo", "craneGustGo", "Gust No-Go must be greater than Gust Go."],
+          ["concreteGoMinimum", "concreteCautionMinimum", "Go minimum must be greater than Caution minimum."],
+          ["roofingRainNoGo", "roofingRainGo", "Rain No-Go must be greater than Rain Go."],
+          ["roofingGustNoGo", "roofingGustGo", "Gust No-Go must be greater than Gust Go."]
+        ].forEach(([upperKey, lowerKey, message]) => {
+          if (!errors[upperKey] && !errors[lowerKey] && values[upperKey] <= values[lowerKey]) {
+            errors[upperKey] = message;
+          }
+        });
+
+        Object.entries(thresholdInputIds).forEach(([key, id]) => {
+          const input = document.getElementById(id);
+          const errorElement = document.getElementById(`${id}-error`);
+          input.setAttribute("aria-invalid", errors[key] ? "true" : "false");
+          errorElement.textContent = errors[key];
+          errorElement.hidden = !errors[key];
+        });
+
+        return {
+          valid: Object.values(errors).every(message => !message),
+          values,
+          errors
+        };
+      }
+
+      function recalculateLoadedForecast() {
+        if (!latestHourlyForecast || !lastSuccessfulForecast) return false;
+        latestDailyRatings = calculateDailyActivityRatings(latestHourlyForecast, activeThresholds);
+        renderForecastGrid(latestDailyRatings);
+        if (selectedForecastDate && !drawer.hidden) {
+          renderDailyForecastDetails(selectedForecastDate);
+        }
+        logForecastCalculations(latestHourlyForecast, latestDailyRatings, lastSuccessfulForecast.coordinates);
+        return true;
+      }
+
+      function applyThresholdSettings(values, announce = true) {
+        activeThresholds = { ...values };
+        if (recalculateLoadedForecast()) {
+          if (announce) {
+            showForecastState(
+              "success",
+              "Thresholds applied; forecast badges and day details were recalculated."
+            );
+          }
+          return;
+        }
+        if (announce) {
+          showForecastState(
+            "pending",
+            "Thresholds saved for this page session. Daily ratings will be calculated when a forecast loads."
+          );
+        }
+      }
+
+      function handleApplyThresholds() {
+        const result = validateThresholdInputs();
+        if (!result.valid) {
+          const firstInvalid = Object.keys(result.errors).find(key => result.errors[key]);
+          document.getElementById(thresholdInputIds[firstInvalid]).focus();
+          showForecastState("error", "Correct the highlighted threshold settings. Existing thresholds remain active.");
+          return;
+        }
+        applyThresholdSettings(result.values);
+      }
+
+      function resetThresholdSettings() {
+        Object.entries(thresholdInputIds).forEach(([key, id]) => {
+          document.getElementById(id).value = String(defaultThresholds[key]);
+        });
+        const result = validateThresholdInputs();
+        applyThresholdSettings(result.values);
+      }
+
+      async function fetchHourlyForecast(coordinates) {
+        const url = buildForecastRequestUrl(coordinates);
+
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const controller = new AbortController();
+          const timeoutId = window.setTimeout(() => controller.abort(), 12000);
+          let response;
+          try {
+            response = await fetch(url, { signal: controller.signal });
+          } catch (error) {
+            window.clearTimeout(timeoutId);
+            if (attempt === 0) continue;
+            if (error.name === "AbortError") {
+              throw new Error("The forecast request timed out after 12 seconds.");
+            }
+            throw new Error("A network error prevented the forecast from loading.");
+          }
+
+          if (!response.ok) {
+            window.clearTimeout(timeoutId);
+            if (response.status >= 500 && attempt === 0) continue;
+            throw new Error(`The forecast service returned HTTP ${response.status}.`);
+          }
+
+          let payload;
+          try {
+            payload = await response.json();
+          } catch (error) {
+            window.clearTimeout(timeoutId);
+            if (error.name === "AbortError" && attempt === 0) continue;
+            if (error.name === "AbortError") {
+              throw new Error("The forecast request timed out after 12 seconds.");
+            }
+            throw new Error("The forecast service returned invalid JSON.");
+          }
+          window.clearTimeout(timeoutId);
+          return validateHourlyForecastResponse(payload);
+        }
+
+        throw new Error("The forecast could not be loaded after one retry.");
+      }
+
+      function formatLocationLabel(coordinates) {
+        if (
+          coordinates.latitude === provo[0] &&
+          coordinates.longitudeWest === Math.abs(provo[1])
+        ) {
+          return "Provo, UT";
+        }
+        return `${coordinates.latitude.toFixed(4)}, ${(-coordinates.longitudeWest).toFixed(4)}`;
+      }
+
+      function updateSelectedLocation(coordinates) {
+        const label = formatLocationLabel(coordinates);
+        document.getElementById("map-location-label").textContent = label;
+        document.getElementById("forecast-location").textContent = label;
+      }
+
+      function showForecastState(state, message, canRetry = false, canUseCachedForecast = false) {
+        forecastState.dataset.state = state;
+        forecastStateMessage.textContent = message;
+        retryForecastButton.hidden = !canRetry;
+        useCachedForecastButton.hidden = !canUseCachedForecast;
+      }
+
+      function clearDisplayedForecast() {
+        if (!drawer.hidden) closeDrawer(false);
+        grid.replaceChildren();
+        grid.hidden = true;
+        gridHint.hidden = true;
+        clearBestThreeDayPourWindow();
+        selectedForecastDate = null;
+        lastFocusedCard = null;
+      }
+
+      function showCoordinateErrors(errors) {
+        [[latitudeInput, latitudeError, errors.latitude], [longitudeInput, longitudeError, errors.longitude]]
+          .forEach(([input, messageElement, message]) => {
+            input.setAttribute("aria-invalid", message ? "true" : "false");
+            messageElement.textContent = message;
+            messageElement.hidden = !message;
+          });
+      }
+
+      function setForecastLoading(isLoading) {
+        isLoadingForecast = isLoading;
+        applyLocationButton.disabled = isLoading;
+        applyLocationButton.textContent = isLoading ? "Loading..." : "Apply Location";
+        resetButton.disabled = isLoading;
+        retryForecastButton.disabled = isLoading;
+        useCachedForecastButton.disabled = isLoading;
+        latitudeInput.disabled = isLoading;
+        longitudeInput.disabled = isLoading;
+        if (map) {
+          if (isLoading) {
+            map.dragging.disable();
+            marker.dragging.disable();
+          } else {
+            map.dragging.enable();
+            marker.dragging.enable();
+          }
+        }
+      }
+
+      async function loadForecastForLocation(coordinates) {
+        if (isLoadingForecast) return;
+        lastRequestedCoordinates = coordinates;
+        clearDisplayedForecast();
+        latestHourlyForecast = null;
+        latestDailyRatings = null;
+        forecastBanner.lastChild.textContent = "Loading live forecast…";
+        setForecastLoading(true);
+        document.getElementById("map-status").className = "map-status is-pending";
+        document.getElementById("map-status").textContent = "Loading forecast…";
+        showForecastState("loading", `Loading the hourly forecast for ${formatLocationLabel(coordinates)}…`);
+
+        try {
+          const forecast = await fetchHourlyForecast(coordinates);
+          const dailyRatings = calculateDailyActivityRatings(forecast, activeThresholds);
+          latestHourlyForecast = forecast;
+          latestDailyRatings = dailyRatings;
+          lastSuccessfulForecast = {
+            forecast,
+            dailyRatings,
+            coordinates: { ...coordinates },
+            loadedAt: new Date()
+          };
+          logForecastCalculations(forecast, dailyRatings, coordinates);
+          renderForecastGrid(dailyRatings);
+          forecastBanner.lastChild.textContent = `Live forecast · ${dailyRatings.length} days`;
+          document.getElementById("map-status").className = "map-status";
+          document.getElementById("map-status").textContent = "Forecast loaded";
+          const count = forecast.hourly.time.length;
+          const timezone = forecast.timezone || "location timezone";
+          showForecastState(
+            "success",
+            `Forecast loaded for ${formatLocationLabel(coordinates)} (${count} hours, ${timezone}); ${dailyRatings.length} daily ratings are shown below.`
+          );
+        } catch (error) {
+          clearDisplayedForecast();
+          forecastBanner.lastChild.textContent = "Forecast unavailable";
+          document.getElementById("map-status").className = "map-status is-error";
+          document.getElementById("map-status").textContent = "Forecast unavailable";
+          showForecastState(
+            "error",
+            `Weather unavailable — check your connection and try again. ${error.message} No ratings are shown until a forecast is available.`,
+            true,
+            Boolean(lastSuccessfulForecast)
+          );
+          console.error("Unable to load the Open-Meteo forecast:", error);
+        } finally {
+          setForecastLoading(false);
+        }
+      }
+
+      function useLastSuccessfulForecast() {
+        if (!lastSuccessfulForecast) {
+          showForecastState("error", "There is no previously loaded forecast available in this page session.");
+          return;
+        }
+        latestHourlyForecast = lastSuccessfulForecast.forecast;
+        latestDailyRatings = calculateDailyActivityRatings(latestHourlyForecast, activeThresholds);
+        lastSuccessfulForecast.dailyRatings = latestDailyRatings;
+        const coordinates = lastSuccessfulForecast.coordinates;
+        lastRequestedCoordinates = { ...coordinates };
+        latitudeInput.value = coordinates.latitude.toFixed(4);
+        longitudeInput.value = coordinates.longitudeWest.toFixed(4);
+        showCoordinateErrors({ latitude: "", longitude: "" });
+        updateSelectedLocation(coordinates);
+        const point = [coordinates.latitude, -coordinates.longitudeWest];
+        if (marker) marker.setLatLng(point).bindPopup(`${formatLocationLabel(coordinates)} jobsite`).openPopup();
+        if (map) map.setView(point, coordinates.latitude === provo[0] && coordinates.longitudeWest === Math.abs(provo[1]) ? 11 : map.getZoom());
+        document.getElementById("map-status").className = "map-status is-pending";
+        document.getElementById("map-status").textContent = "Using cached forecast";
+        logForecastCalculations(latestHourlyForecast, latestDailyRatings, coordinates);
+        renderForecastGrid(latestDailyRatings);
+        forecastBanner.lastChild.textContent = `Cached forecast · ${latestDailyRatings.length} days`;
+        showForecastState(
+          "cached",
+          `Using cached forecast — may be outdated. It was loaded at ${lastSuccessfulForecast.loadedAt.toLocaleString()}. Ratings were recalculated with the current thresholds.`
+        );
+      }
+
+      function clearCoordinateError(input, errorElement) {
+        input.removeAttribute("aria-invalid");
+        errorElement.textContent = "";
+        errorElement.hidden = true;
+      }
+
+      function setCoordinatesFromMap(latitude, longitude) {
+        if (isLoadingForecast) return;
+        if (longitude > 0) {
+          clearDisplayedForecast();
+          forecastBanner.lastChild.textContent = "Location unavailable";
+          const currentLocation = validateCoordinateValues(latitudeInput.value, longitudeInput.value);
+          if (currentLocation.valid && marker) {
+            marker.setLatLng([
+              currentLocation.coordinates.latitude,
+              -currentLocation.coordinates.longitudeWest
+            ]);
+          }
+          showCoordinateErrors({
+            latitude: "",
+            longitude: "The Longitude (°W) field accepts western-hemisphere locations only."
+          });
+          document.getElementById("map-status").className = "map-status is-error";
+          document.getElementById("map-status").textContent = "East longitude unavailable";
+          showForecastState(
+            "error",
+            "This location form accepts degrees west only. Enter a supported western-hemisphere coordinate or select another map point."
+          );
+          return;
+        }
+        const latitudeValue = Number(latitude.toFixed(4));
+        const longitudeWest = Number(Math.abs(longitude).toFixed(4));
+        latitudeInput.value = latitudeValue.toFixed(4);
+        longitudeInput.value = longitudeWest.toFixed(4);
+        clearDisplayedForecast();
+        forecastBanner.lastChild.textContent = "Location changed · apply to refresh";
+        showCoordinateErrors({ latitude: "", longitude: "" });
+        marker.setLatLng([latitudeValue, -longitudeWest]).bindPopup("Selected jobsite").openPopup();
+        updateSelectedLocation({ latitude: latitudeValue, longitudeWest });
+        document.getElementById("map-status").className = "map-status is-pending";
+        document.getElementById("map-status").textContent = "Apply to load forecast";
+        showForecastState(
+          "pending",
+          "Location selected. Choose Apply Location to fetch the forecast and calculate ratings."
+        );
+      }
+
+      async function applySelectedLocation() {
+        const result = validateCoordinateValues(latitudeInput.value, longitudeInput.value);
+        showCoordinateErrors(result.errors);
+        if (!result.valid) {
+          const firstInvalid = result.errors.latitude ? latitudeInput : longitudeInput;
+          firstInvalid.focus();
+          showForecastState("error", "Correct the highlighted coordinates before applying the location.");
+          document.getElementById("map-status").className = "map-status is-error";
+          document.getElementById("map-status").textContent = "Check coordinates";
+          return;
+        }
+
+        const coordinates = result.coordinates;
+        if (marker) {
+          marker
+            .setLatLng([coordinates.latitude, -coordinates.longitudeWest])
+            .bindPopup(`${formatLocationLabel(coordinates)} jobsite`)
+            .openPopup();
+        }
+        if (map) map.setView([coordinates.latitude, -coordinates.longitudeWest], map.getZoom());
+        updateSelectedLocation(coordinates);
+        await loadForecastForLocation(coordinates);
+      }
+
+      async function resetLocationToProvo() {
+        if (isLoadingForecast) return;
+        latitudeInput.value = provo[0].toFixed(4);
+        longitudeInput.value = Math.abs(provo[1]).toFixed(4);
+        showCoordinateErrors({ latitude: "", longitude: "" });
+        if (marker) marker.setLatLng(provo).bindPopup("Provo, UT jobsite").openPopup();
+        map?.setView(provo, 11);
+        const coordinates = { latitude: provo[0], longitudeWest: Math.abs(provo[1]) };
+        updateSelectedLocation(coordinates);
+        await loadForecastForLocation(coordinates);
+      }
 
       function setBadge(element, rating) {
         element.textContent = rating;
@@ -1351,18 +2200,212 @@
         );
       }
 
-      function renderSampleDay(index) {
-        const sample = daySamples[index];
-        document.getElementById("detail-title").textContent = sample.title;
-        for (const key of ["low", "high", "wind", "gust", "rain", "hours"]) {
-          document.querySelector(`[data-metric="${key}"]`).textContent = sample[key];
+      function formatForecastDate(date, options) {
+        const [year, month, day] = date.split("-").map(Number);
+        return new Intl.DateTimeFormat("en-US", {
+          ...options,
+          timeZone: "UTC"
+        }).format(new Date(Date.UTC(year, month - 1, day, 12)));
+      }
+
+      function formatForecastValue(value, unit = "") {
+        return typeof value === "number" && Number.isFinite(value) ? `${value}${unit}` : "—";
+      }
+
+      function renderBestThreeDayPourWindow(result) {
+        const title = document.getElementById("pour-window-title");
+        const summary = document.getElementById("pour-window-summary");
+        const daysList = document.getElementById("pour-window-days");
+        const metrics = document.getElementById("pour-window-metrics");
+        const reason = document.getElementById("pour-window-reason");
+        const noGoReasons = document.getElementById("pour-window-no-go-reasons");
+        const dataNote = document.getElementById("pour-window-data-note");
+        daysList.replaceChildren();
+        metrics.replaceChildren();
+        noGoReasons.replaceChildren();
+        noGoReasons.hidden = true;
+        dataNote.hidden = true;
+        pourWindowBanner.hidden = false;
+
+        if (!result.window) {
+          title.textContent = "Unable to rank pour windows — forecast data incomplete";
+          summary.textContent = "No day cards are highlighted because a complete, consecutive 7-day forecast is required.";
+          reason.textContent = "";
+          dataNote.textContent = "All five windows contain missing or invalid concrete inputs, or the forecast does not contain seven consecutive local dates.";
+          dataNote.hidden = false;
+          return;
         }
-        ["crane", "concrete", "roofing"].forEach((activity, i) => {
-          setBadge(document.querySelector(`[data-badge="${activity}"]`), sample.ratings[i]);
-          document.querySelector(`[data-reason="${activity}"]`).textContent = sample.reasons[i];
+
+        const selected = result.window;
+        const fallback = !result.noGoFreeWindowExists;
+        title.textContent = fallback
+          ? "Best available — no fully evaluated 3-day window is No-Go-free"
+          : `${formatForecastDate(selected.startDate, { month: "short", day: "numeric", year: "numeric" })} – ${formatForecastDate(selected.endDate, { month: "short", day: "numeric", year: "numeric" })}`;
+        summary.textContent = fallback
+          ? "Every fully evaluated 3-day option contains at least one No-Go day; this is the highest-ranked available window, not a safe or recommended window."
+          : `Selected from ${result.eligibleWindowCount} fully evaluated No-Go-free window${result.eligibleWindowCount === 1 ? "" : "s"}.`;
+
+        selected.days.forEach(day => {
+          const item = document.createElement("li");
+          item.className = "pour-window-day";
+          const date = document.createElement("span");
+          date.textContent = formatForecastDate(day.date, { weekday: "short", month: "short", day: "numeric" });
+          const badge = document.createElement("span");
+          setBadge(badge, day.activities.concrete.status);
+          item.append(date, badge);
+          daysList.append(item);
         });
-        const tbody = document.querySelector("#hourly-table tbody");
-        tbody.replaceChildren(...sample.rows.map(row => {
+
+        [
+          `Status count: ${selected.goCount} Go · ${selected.cautionCount} Caution · ${selected.noGoCount} No-Go`,
+          `Coldest overnight low: ${formatForecastValue(selected.coldestNightMinimum, "°F")}`,
+          `Worst daily rain probability: ${formatForecastValue(selected.worstDayRainProbability, "%")}`
+        ].forEach(text => {
+          const metric = document.createElement("span");
+          metric.textContent = text;
+          metrics.append(metric);
+        });
+
+        reason.textContent = result.weatherTieBreakUsed
+          ? `Status counts were tied across ${result.statusTieCount} eligible windows; the equal-weight warmth/rain percentile ranking selected this window.${result.earliestStartTieBreakUsed ? " The earlier start date resolved the remaining tie." : ""}`
+          : "Ranked by the most Concrete Pours Go days, then the fewest No-Go days.";
+
+        if (fallback) {
+          selected.days.filter(day => day.activities.concrete.status === "NO-GO").forEach(day => {
+            const item = document.createElement("li");
+            item.textContent = `${formatForecastDate(day.date, { weekday: "long", month: "short", day: "numeric" })}: ${day.activities.concrete.reason}`;
+            noGoReasons.append(item);
+          });
+          noGoReasons.hidden = false;
+        }
+
+        if (result.incompleteWindowCount > 0) {
+          dataNote.textContent = `${result.incompleteWindowCount} incomplete window${result.incompleteWindowCount === 1 ? " was" : "s were"} excluded from ranking.`;
+          dataNote.hidden = false;
+        }
+      }
+
+      function clearBestThreeDayPourWindow() {
+        pourWindowBanner.hidden = true;
+        document.getElementById("pour-window-days").replaceChildren();
+        document.getElementById("pour-window-metrics").replaceChildren();
+        document.getElementById("pour-window-no-go-reasons").replaceChildren();
+      }
+
+      function renderForecastGrid(days) {
+        const pourWindow = calculateBestThreeDayPourWindow(days);
+        renderBestThreeDayPourWindow(pourWindow);
+        const selectedDates = new Set(pourWindow.window?.days.map(day => day.date) || []);
+        const activities = [
+          ["crane", "Crane Lifts"],
+          ["concrete", "Concrete Pours"],
+          ["roofing", "Roofing"]
+        ];
+        const cards = days.map(day => {
+          const fullDate = formatForecastDate(day.date, {
+            weekday: "long",
+            month: "long",
+            day: "numeric",
+            year: "numeric"
+          });
+          const isPourWindowDay = selectedDates.has(day.date);
+          const card = document.createElement("button");
+          card.type = "button";
+          card.className = `day-card${isPourWindowDay ? " is-pour-window" : ""}`;
+          card.dataset.date = day.date;
+          card.setAttribute(
+            "aria-label",
+            `View details for ${fullDate}${isPourWindowDay ? "; included in the Best 3-Day Pour Window" : ""}`
+          );
+          card.setAttribute("aria-pressed", "false");
+
+          const dateBlock = document.createElement("span");
+          dateBlock.className = "day-label";
+          const dayName = document.createElement("span");
+          dayName.className = "day-name";
+          dayName.textContent = formatForecastDate(day.date, { weekday: "short" });
+          const dayDate = document.createElement("span");
+          dayDate.className = "day-date";
+          dayDate.textContent = formatForecastDate(day.date, { month: "short", day: "numeric" });
+          dateBlock.append(dayName, dayDate);
+          const windowLabel = document.createElement("span");
+          windowLabel.className = "pour-window-card-label";
+          windowLabel.textContent = "Pour window";
+          windowLabel.hidden = !isPourWindowDay;
+
+          const conditions = document.createElement("span");
+          conditions.className = "day-condition";
+          conditions.textContent =
+            `Low ${formatForecastValue(day.minimumTemperature, "°F")} · High ${formatForecastValue(day.maximumTemperature, "°F")}`;
+          card.append(dateBlock, windowLabel, conditions);
+
+          activities.forEach(([key, label]) => {
+            const status = document.createElement("span");
+            status.className = "activity-status";
+            const name = document.createElement("span");
+            name.className = "activity-name";
+            name.textContent = label;
+            const badge = document.createElement("span");
+            setBadge(badge, day.activities[key].status);
+            status.append(name, badge);
+            card.append(status);
+          });
+          return card;
+        });
+        grid.replaceChildren(...cards);
+        if (selectedForecastDate && !drawer.hidden) {
+          lastFocusedCard = cards.find(card => card.dataset.date === selectedForecastDate) || null;
+          lastFocusedCard?.setAttribute("aria-pressed", "true");
+        }
+        grid.setAttribute("aria-label", `${days.length}-day activity forecast`);
+        grid.hidden = cards.length === 0;
+        gridHint.hidden = cards.length === 0;
+      }
+
+      function renderDailyForecastDetails(date) {
+        const day = latestDailyRatings?.find(item => item.date === date);
+        if (!day || !latestHourlyForecast) return;
+
+        document.getElementById("detail-title").textContent = formatForecastDate(date, {
+          weekday: "long",
+          month: "long",
+          day: "numeric",
+          year: "numeric"
+        });
+        document.getElementById("drawer-intro").textContent =
+          `Daily forecast for ${document.getElementById("forecast-location").textContent}. Reasons reflect the active thresholds.`;
+
+        const metricValues = {
+          low: formatForecastValue(day.minimumTemperature, "°F"),
+          high: formatForecastValue(day.maximumTemperature, "°F"),
+          wind: formatForecastValue(day.maximumSustainedWind, " mph"),
+          gust: formatForecastValue(day.maximumGust, " mph"),
+          rain: formatForecastValue(day.maximumRainProbability, "%"),
+          hours: String(day.hourlyCount)
+        };
+        Object.entries(metricValues).forEach(([key, value]) => {
+          document.querySelector(`[data-metric="${key}"]`).textContent = value;
+        });
+
+        ["crane", "concrete", "roofing"].forEach(activity => {
+          const rating = day.activities[activity];
+          setBadge(document.querySelector(`[data-badge="${activity}"]`), rating.status);
+          document.querySelector(`[data-reason="${activity}"]`).textContent = rating.reason;
+        });
+
+        const hourly = latestHourlyForecast.hourly;
+        const rows = [];
+        hourly.time.forEach((time, index) => {
+          if (time.slice(0, 10) !== date) return;
+          rows.push([
+            time.replace("T", " "),
+            formatForecastValue(hourly.temperature_2m[index]),
+            formatForecastValue(hourly.wind_speed_10m[index]),
+            formatForecastValue(hourly.wind_gusts_10m[index]),
+            formatForecastValue(hourly.precipitation_probability[index])
+          ]);
+        });
+        hourlyTableBody.replaceChildren(...rows.map(row => {
           const tr = document.createElement("tr");
           row.forEach(value => {
             const cell = document.createElement("td");
@@ -1371,10 +2414,12 @@
           });
           return tr;
         }));
+        hourlyDetails.open = false;
       }
 
-      function openDrawer(index, card) {
-        renderSampleDay(index);
+      function openDrawer(date, card) {
+        selectedForecastDate = date;
+        renderDailyForecastDetails(date);
         drawer.hidden = false;
         scrim.hidden = false;
         if (card) {
@@ -1384,34 +2429,84 @@
         closeButton.focus();
       }
 
-      function closeDrawer() {
+      function closeDrawer(restoreFocus = true) {
         drawer.hidden = true;
         scrim.hidden = true;
         grid.querySelectorAll(".day-card").forEach(card => card.setAttribute("aria-pressed", "false"));
-        if (lastFocusedCard) lastFocusedCard.focus();
+        if (restoreFocus && lastFocusedCard?.isConnected) lastFocusedCard.focus();
+        lastFocusedCard = null;
+        selectedForecastDate = null;
       }
 
       grid.addEventListener("click", event => {
         const card = event.target.closest(".day-card");
         if (!card) return;
         grid.querySelectorAll(".day-card").forEach(item => item.setAttribute("aria-pressed", "false"));
-        openDrawer(Number(card.dataset.day), card);
+        openDrawer(card.dataset.date, card);
       });
 
       closeButton.addEventListener("click", closeDrawer);
       scrim.addEventListener("click", closeDrawer);
       document.addEventListener("keydown", event => {
-        if (event.key === "Escape" && !drawer.hidden) closeDrawer();
+        if (drawer.hidden) return;
+        if (event.key === "Escape") {
+          closeDrawer();
+          return;
+        }
+        if (event.key === "Tab") {
+          const focusable = Array.from(drawer.querySelectorAll(
+            'button:not([disabled]), summary, [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])'
+          )).filter(element =>
+            element.getClientRects().length > 0 &&
+            (!element.closest("details:not([open])") || element.matches("summary"))
+          );
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+          if (!first || !last) {
+            event.preventDefault();
+          } else if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
       });
 
-      resetButton.addEventListener("click", () => {
-        document.getElementById("latitude").value = "40.2338";
-        document.getElementById("longitude").value = "111.6585";
-        document.getElementById("map-status").textContent = "Provo jobsite";
-        if (map) {
-          map.setView(provo, 11);
-          marker.setLatLng(provo).openPopup();
-        }
+      applyLocationButton.addEventListener("click", applySelectedLocation);
+      resetButton.addEventListener("click", resetLocationToProvo);
+      retryForecastButton.addEventListener("click", () => loadForecastForLocation(lastRequestedCoordinates));
+      useCachedForecastButton.addEventListener("click", useLastSuccessfulForecast);
+      document.getElementById("apply-thresholds").addEventListener("click", handleApplyThresholds);
+      document.getElementById("reset-thresholds").addEventListener("click", resetThresholdSettings);
+
+      Object.values(thresholdInputIds).forEach(id => {
+        document.getElementById(id).addEventListener("input", () => {
+          const errorElement = document.getElementById(`${id}-error`);
+          document.getElementById(id).removeAttribute("aria-invalid");
+          errorElement.textContent = "";
+          errorElement.hidden = true;
+        });
+      });
+
+      latitudeInput.addEventListener("input", () => clearCoordinateError(latitudeInput, latitudeError));
+      longitudeInput.addEventListener("input", () => clearCoordinateError(longitudeInput, longitudeError));
+      [latitudeInput, longitudeInput].forEach(input => {
+        input.addEventListener("input", () => {
+          if (isLoadingForecast) return;
+          clearDisplayedForecast();
+          forecastBanner.lastChild.textContent = "Location changed · apply to refresh";
+          document.getElementById("map-status").className = "map-status is-pending";
+          document.getElementById("map-status").textContent = "Apply to update location";
+          showForecastState(
+            "pending",
+            "Coordinates edited. Choose Apply Location to update the marker and fetch a forecast."
+          );
+        });
+        input.addEventListener("keydown", event => {
+          if (event.key === "Enter" && !isLoadingForecast) applySelectedLocation();
+        });
       });
 
       document.querySelectorAll(".thresholds summary").forEach(summary => {
@@ -1439,20 +2534,52 @@
         }
       });
 
-      if (window.L) {
+      function initializeLeafletMap() {
+        if (!window.L || map) return;
         map = L.map("map", { scrollWheelZoom: false, zoomControl: true }).setView(provo, 11);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
           maxZoom: 19,
           attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-        marker = L.marker(provo).addTo(map).bindPopup("Provo, UT jobsite").openPopup();
-      } else {
-        document.getElementById("map-fallback").style.display = "grid";
-        document.getElementById("map-status").textContent = "Map preview";
+        marker = L.marker(provo, { draggable: true }).addTo(map).bindPopup("Provo, UT jobsite").openPopup();
+        map.on("click", event => setCoordinatesFromMap(event.latlng.lat, event.latlng.lng));
+        marker.on("dragend", () => {
+          const point = marker.getLatLng();
+          setCoordinatesFromMap(point.lat, point.lng);
+        });
+        document.getElementById("map-fallback").style.display = "none";
+        if (isLoadingForecast) {
+          map.dragging.disable();
+          marker.dragging.disable();
+        }
       }
 
-      window.setTimeout(() => openDrawer(0, grid.querySelector(".day-card")), 0);
+      function showLeafletUnavailable() {
+        if (window.L) return;
+        document.getElementById("map-fallback").style.display = "grid";
+        document.getElementById("map-status").className = "map-status is-error";
+        document.getElementById("map-status").textContent = "Map unavailable";
+        document.querySelector("#map-fallback strong").textContent = "Interactive map unavailable";
+        document.querySelector("#map-fallback p").lastChild.textContent =
+          " Enter coordinates manually; forecast controls remain available.";
+      }
+
+      window.onLeafletReady = initializeLeafletMap;
+      window.onLeafletUnavailable = showLeafletUnavailable;
+      document.getElementById("map-fallback").style.display = "grid";
+      if (window.L) initializeLeafletMap();
+      window.setTimeout(showLeafletUnavailable, 8000);
+
+      loadForecastForLocation(lastRequestedCoordinates);
     })();
   </script>
+  <script
+    async
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+    onload="window.onLeafletReady()"
+    onerror="window.onLeafletUnavailable()"
+  ></script>
 </body>
 </html>
